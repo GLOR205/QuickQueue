@@ -57,3 +57,13 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+
+# The firebase_auth version above resolves a firebase_auth_web build that no
+# longer compiles against the currently installed Flutter/Dart SDK (missing
+# `handleThenable`). These overrides pull in a matched, current set of
+# Firebase packages so the app builds for web; remove once the base
+# constraints above are bumped to match.
+dependency_overrides:
+  firebase_core: ^4.12.1
+  firebase_auth: ^6.5.6
+  cloud_firestore: ^6.7.1
