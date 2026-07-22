@@ -46,17 +46,32 @@ class _LocationsView extends StatelessWidget {
     final uri = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
     );
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    var opened = false;
+    try {
+      // webOnlyWindowName forces a new browser tab on web instead of
+      // navigating the current one away from the app — without it some
+      // browsers fall back to replacing the current page when a popup is
+      // blocked, which looks like the app itself broke.
+      opened = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+        webOnlyWindowName: '_blank',
+      );
+    } catch (_) {
+      opened = false;
+    }
     if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Could not open maps')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't open maps — check your connection and try again")),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: Column(
         children: [
           const QQHeader(
@@ -74,7 +89,7 @@ class _LocationsView extends StatelessWidget {
               },
               builder: (context, state) {
                 if (state.status == LocationStatus.loading || state.status == LocationStatus.initial) {
-                  return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                  return Center(child: CircularProgressIndicator(color: colors.primary));
                 }
                 if (state.status == LocationStatus.error) {
                   return Center(child: Text(state.errorMessage ?? 'Something went wrong'));
@@ -91,7 +106,7 @@ class _LocationsView extends StatelessWidget {
                           Expanded(
                             child: Text(
                               'Welcome User',
-                              style: AppStyles.sectionTitle.copyWith(color: AppColors.primary),
+                              style: AppStyles.sectionTitle(context).copyWith(color: colors.primary),
                             ),
                           ),
                           TextButton.icon(
@@ -114,7 +129,7 @@ class _LocationsView extends StatelessWidget {
                                   ),
                             label: Text(
                               state.userPosition == null ? 'Use my location' : 'Nearest first',
-                              style: AppStyles.link.copyWith(fontSize: 12),
+                              style: AppStyles.link(context).copyWith(fontSize: 12),
                             ),
                             style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
                           ),
@@ -122,38 +137,38 @@ class _LocationsView extends StatelessWidget {
                       ),
                       Text(
                         "Don't know exactly where a place is? Use your location or tap the pin to get directions.",
-                        style: AppStyles.caption,
+                        style: AppStyles.caption(context),
                       ),
                       const SizedBox(height: 14),
                       TextField(
                         onChanged: (value) =>
                             context.read<LocationBloc>().add(LocationSearchChanged(value)),
-                        style: AppStyles.body,
+                        style: AppStyles.body(context),
                         decoration: InputDecoration(
                           hintText: AppStrings.searchForPlace,
-                          hintStyle: AppStyles.body.copyWith(color: AppColors.textMuted),
-                          prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+                          hintStyle: AppStyles.body(context).copyWith(color: colors.textMuted),
+                          prefixIcon: Icon(Icons.search, color: colors.textMuted),
                           filled: true,
-                          fillColor: AppColors.surface,
+                          fillColor: colors.surface,
                           contentPadding: const EdgeInsets.symmetric(vertical: 14),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: BorderSide(color: colors.border),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: BorderSide(color: colors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                            borderSide: BorderSide(color: colors.primary, width: 1.5),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
                       Expanded(
                         child: locations.isEmpty
-                            ? Center(child: Text('No locations found', style: AppStyles.bodyMuted))
+                            ? Center(child: Text('No locations found', style: AppStyles.bodyMuted(context)))
                             : ListView.separated(
                                 itemCount: locations.length,
                                 separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -210,9 +225,10 @@ class _LocationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final accent = Color(location.colorValue);
     return Material(
-      color: isSelected ? AppColors.primaryLight : AppColors.surface,
+      color: isSelected ? colors.primaryLight : colors.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -221,7 +237,7 @@ class _LocationCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: isSelected ? AppColors.primary : Colors.transparent, width: 1.4),
+            border: Border.all(color: isSelected ? colors.primary : Colors.transparent, width: 1.4),
             boxShadow: isSelected
                 ? null
                 : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
@@ -238,7 +254,7 @@ class _LocationCard extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   location.avatarLetter,
-                  style: AppStyles.cardTitle.copyWith(color: accent),
+                  style: AppStyles.cardTitle(context).copyWith(color: accent),
                 ),
               ),
               const SizedBox(width: 14),
@@ -246,13 +262,13 @@ class _LocationCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(location.name, style: AppStyles.cardTitle),
+                    Text(location.name, style: AppStyles.cardTitle(context)),
                     const SizedBox(height: 2),
                     Text(
                       distanceKm == null
                           ? '${location.area}, ${location.district}'
                           : '${location.area}, ${location.district} · ${distanceKm!.toStringAsFixed(1)} km away',
-                      style: AppStyles.bodyMuted,
+                      style: AppStyles.bodyMuted(context),
                     ),
                   ],
                 ),
@@ -260,7 +276,7 @@ class _LocationCard extends StatelessWidget {
               IconButton(
                 onPressed: onDirections,
                 tooltip: 'Get directions',
-                icon: const Icon(Icons.directions_outlined, color: AppColors.primary),
+                icon: Icon(Icons.directions_outlined, color: colors.primary),
               ),
             ],
           ),

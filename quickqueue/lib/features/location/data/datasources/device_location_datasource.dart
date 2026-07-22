@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -27,7 +28,9 @@ class GeolocatorDeviceLocationDataSource implements DeviceLocationDataSource {
     }
     if (permission == LocationPermission.deniedForever) {
       throw const ValidationException(
-        'Location permission is permanently denied. Enable it from app settings.',
+        kIsWeb
+            ? "Location access is blocked for this site. Allow it in your browser's site settings and try again."
+            : 'Location permission is permanently denied. Enable it from app settings.',
       );
     }
 

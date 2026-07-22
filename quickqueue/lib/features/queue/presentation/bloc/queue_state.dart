@@ -29,6 +29,7 @@ class QueueState extends Equatable {
     QueueEntity? selectedQueue,
     TicketEntity? ticket,
     List<NotificationEntity>? notifications,
+    String? errorMessage,
   }) {
     return QueueState(
       status: status ?? this.status,
@@ -36,6 +37,19 @@ class QueueState extends Equatable {
       selectedQueue: selectedQueue ?? this.selectedQueue,
       ticket: ticket ?? this.ticket,
       notifications: notifications ?? this.notifications,
+      errorMessage: errorMessage,
+    );
+  }
+
+  /// Clears the active ticket while preserving everything else — copyWith
+  /// can't null out [ticket] since its `??` pattern treats null as "leave
+  /// unchanged".
+  QueueState clearTicket() {
+    return QueueState(
+      status: status,
+      queues: queues,
+      selectedQueue: selectedQueue,
+      notifications: notifications,
     );
   }
 

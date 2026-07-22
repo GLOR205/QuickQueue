@@ -5,18 +5,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_styles.dart';
 import '../../../../core/theme/theme_cubit.dart';
-import '../../../../core/widgets/app_bottom_nav.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../auth/presentaton/screens/index_screen.dart';
-import '../../../queue/presentation/screens/notifications_screen.dart';
-import '../../data/datasources/profile_remote_datasource.dart';
-import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/entities/profile_entity.dart';
-import '../../domain/usecases/change_password.dart';
-import '../../domain/usecases/get_user_profile.dart';
-import '../../domain/usecases/submit_rating.dart';
-import '../../domain/usecases/update_preferences.dart';
-import '../../domain/usecases/update_profile.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -25,40 +16,10 @@ import '../widgets/edit_profile_sheet.dart';
 
 const _languageNames = {'en': 'English', 'rw': 'Kinyarwanda', 'fr': 'Français'};
 
-class UserProfileScreen extends StatelessWidget {
-  const UserProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) {
-        final repository = ProfileRepositoryImpl(MockProfileRemoteDataSource());
-        return ProfileBloc(
-          getUserProfile: GetUserProfile(repository),
-          submitRating: SubmitRating(repository),
-          updateProfile: UpdateProfile(repository),
-          changePassword: ChangePassword(repository),
-          updatePreferences: UpdatePreferences(repository),
-        )..add(const ProfileRequested());
-      },
-      child: const _UserProfileView(),
-    );
-  }
-}
-
-class _UserProfileView extends StatelessWidget {
-  const _UserProfileView();
-
-  void _switchTab(BuildContext context, QQNavTab tab) {
-    if (tab == QQNavTab.profile) return;
-    if (tab == QQNavTab.alerts) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-      );
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
+/// The Profile tab body inside [HomeShell]. Reads the session-scoped
+/// [ProfileBloc] provided at the app root.
+class ProfileBody extends StatelessWidget {
+  const ProfileBody({super.key});
 
   void _logout(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
@@ -121,165 +82,159 @@ class _UserProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: BlocConsumer<ProfileBloc, ProfileState>(
-        listenWhen: (previous, current) => current.status != previous.status,
-        listener: (context, state) {
-          if (state.status == ProfileStatus.error && state.errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
-          }
-        },
-        builder: (context, state) {
-          if (state.status == ProfileStatus.loading || state.status == ProfileStatus.initial) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-          }
-          final profile = state.profile;
-          if (profile == null) {
-            return Center(child: Text(state.errorMessage ?? 'Something went wrong'));
-          }
-          final bloc = context.read<ProfileBloc>();
-          return ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              const QQHeader(title: AppStrings.myProfile, subtitle: AppStrings.myProfileSubtitle),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
-                      alignment: Alignment.center,
-                      child: Text(
-                        profile.avatarLetter,
-                        style: AppStyles.displayTitle.copyWith(color: AppColors.primary),
+    return BlocConsumer<ProfileBloc, ProfileState>(
+      listenWhen: (previous, current) => current.status != previous.status,
+      listener: (context, state) {
+        if (state.status == ProfileStatus.error && state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+        }
+      },
+      builder: (context, state) {
+        if (state.status == ProfileStatus.loading || state.status == ProfileStatus.initial) {
+          return Center(child: CircularProgressIndicator(color: context.colors.primary));
+        }
+        final profile = state.profile;
+        if (profile == null) {
+          return Center(child: Text(state.errorMessage ?? 'Something went wrong'));
+        }
+        final colors = context.colors;
+        final bloc = context.read<ProfileBloc>();
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const QQHeader(title: AppStrings.myProfile, subtitle: AppStrings.myProfileSubtitle),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(color: colors.primaryLight, shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    child: Text(
+                      profile.avatarLetter,
+                      style: AppStyles.displayTitle(context).copyWith(color: colors.primary),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(profile.name, style: AppStyles.sectionTitle(context).copyWith(fontSize: 17)),
+                  const SizedBox(height: 2),
+                  Text(profile.phone, style: AppStyles.bodyMuted(context)),
+                  Text(profile.email, style: AppStyles.bodyMuted(context)),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: () => _logout(context),
+                    style: TextButton.styleFrom(foregroundColor: colors.error, padding: EdgeInsets.zero),
+                    child: Text(AppStrings.logout, style: AppStyles.label(context).copyWith(color: colors.error)),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _StatBox(label: 'Queues joined', value: '${profile.queuesJoined}')),
+                      const SizedBox(width: 10),
+                      Expanded(child: _StatBox(label: 'Avg wait', value: '${profile.avgWaitMinutes} min')),
+                      const SizedBox(width: 10),
+                      Expanded(child: _StatBox(label: 'Time saved', value: '${profile.timeSavedHours} hrs')),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _SectionCard(
+                    title: 'Account',
+                    children: [
+                      _SettingsRow(
+                        icon: Icons.edit_outlined,
+                        label: 'Edit profile',
+                        onTap: () => showEditProfileSheet(context, bloc, profile),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(profile.name, style: AppStyles.sectionTitle.copyWith(fontSize: 17)),
-                    const SizedBox(height: 2),
-                    Text(profile.phone, style: AppStyles.bodyMuted),
-                    Text(profile.email, style: AppStyles.bodyMuted),
-                    const SizedBox(height: 4),
-                    TextButton(
-                      onPressed: () => _logout(context),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.error, padding: EdgeInsets.zero),
-                      child: Text(AppStrings.logout, style: AppStyles.label.copyWith(color: AppColors.error)),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _StatBox(label: 'Queues joined', value: '${profile.queuesJoined}')),
-                        const SizedBox(width: 10),
-                        Expanded(child: _StatBox(label: 'Avg wait', value: '${profile.avgWaitMinutes} min')),
-                        const SizedBox(width: 10),
-                        Expanded(child: _StatBox(label: 'Time saved', value: '${profile.timeSavedHours} hrs')),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    _SectionCard(
-                      title: 'Account',
-                      children: [
-                        _SettingsRow(
-                          icon: Icons.edit_outlined,
-                          label: 'Edit profile',
-                          onTap: () => showEditProfileSheet(context, bloc, profile),
+                      _SettingsRow(
+                        icon: Icons.lock_outline,
+                        label: 'Change password',
+                        onTap: () => showChangePasswordSheet(context, bloc),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _SectionCard(
+                    title: 'Appearance',
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        child: BlocBuilder<ThemeCubit, ThemeMode>(
+                          builder: (context, mode) {
+                            return SegmentedButton<ThemeMode>(
+                              segments: const [
+                                ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(Icons.light_mode_outlined)),
+                                ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(Icons.dark_mode_outlined)),
+                                ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(Icons.settings_suggest_outlined)),
+                              ],
+                              selected: {mode},
+                              onSelectionChanged: (selection) =>
+                                  context.read<ThemeCubit>().setMode(selection.first),
+                            );
+                          },
                         ),
-                        _SettingsRow(
-                          icon: Icons.lock_outline,
-                          label: 'Change password',
-                          onTap: () => showChangePasswordSheet(context, bloc),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _SectionCard(
-                      title: 'Appearance',
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          child: BlocBuilder<ThemeCubit, ThemeMode>(
-                            builder: (context, mode) {
-                              return SegmentedButton<ThemeMode>(
-                                segments: const [
-                                  ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(Icons.light_mode_outlined)),
-                                  ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(Icons.dark_mode_outlined)),
-                                  ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(Icons.settings_suggest_outlined)),
-                                ],
-                                selected: {mode},
-                                onSelectionChanged: (selection) =>
-                                    context.read<ThemeCubit>().setMode(selection.first),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _SectionCard(
-                      title: 'Preferences',
-                      children: [
-                        SwitchListTile(
-                          value: profile.notificationsEnabled,
-                          onChanged: (value) => bloc.add(PreferencesUpdateRequested(
-                            notificationsEnabled: value,
-                            languageCode: profile.languageCode,
-                          )),
-                          activeThumbColor: AppColors.primary,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-                          title: Text('Push notifications', style: AppStyles.body),
-                          subtitle: Text('Get notified as your turn gets close', style: AppStyles.caption),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.language,
-                          label: 'Language',
-                          trailingText: _languageNames[profile.languageCode],
-                          onTap: () => _pickLanguage(context, bloc, profile),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _SectionCard(
-                      title: 'Support',
-                      children: [
-                        _SettingsRow(
-                          icon: Icons.help_outline,
-                          label: 'Help & Support',
-                          onTap: () => _showHelp(context),
-                        ),
-                        _SettingsRow(
-                          icon: Icons.info_outline,
-                          label: 'About Quick Queue',
-                          onTap: () => _showAbout(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(AppStrings.recentQueueHistory, style: AppStyles.sectionTitle),
-                    ),
-                    const SizedBox(height: 12),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: profile.history.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) => _HistoryCard(entry: profile.history[index]),
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _SectionCard(
+                    title: 'Preferences',
+                    children: [
+                      SwitchListTile(
+                        value: profile.notificationsEnabled,
+                        onChanged: (value) => bloc.add(PreferencesUpdateRequested(
+                          notificationsEnabled: value,
+                          languageCode: profile.languageCode,
+                        )),
+                        activeThumbColor: colors.primary,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                        title: Text('Push notifications', style: AppStyles.body(context)),
+                        subtitle: Text('Get notified as your turn gets close', style: AppStyles.caption(context)),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.language,
+                        label: 'Language',
+                        trailingText: _languageNames[profile.languageCode],
+                        onTap: () => _pickLanguage(context, bloc, profile),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _SectionCard(
+                    title: 'Support',
+                    children: [
+                      _SettingsRow(
+                        icon: Icons.help_outline,
+                        label: 'Help & Support',
+                        onTap: () => _showHelp(context),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.info_outline,
+                        label: 'About Quick Queue',
+                        onTap: () => _showAbout(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(AppStrings.recentQueueHistory, style: AppStyles.sectionTitle(context)),
+                  ),
+                  const SizedBox(height: 12),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: profile.history.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) => _HistoryCard(entry: profile.history[index]),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
-      ),
-      bottomNavigationBar: QQBottomNav(
-        current: QQNavTab.profile,
-        onTabSelected: (tab) => _switchTab(context, tab),
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -292,17 +247,19 @@ class _StatBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final chipColor = Color.alphaBlend(colors.textPrimary.withValues(alpha: 0.06), colors.surface);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F1F3),
+        color: chipColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Text(value, style: AppStyles.cardTitle.copyWith(color: AppColors.primary)),
+          Text(value, style: AppStyles.cardTitle(context).copyWith(color: colors.primary)),
           const SizedBox(height: 4),
-          Text(label, style: AppStyles.caption, textAlign: TextAlign.center),
+          Text(label, style: AppStyles.caption(context), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -324,7 +281,7 @@ class _SectionCard extends StatelessWidget {
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Material(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(14),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -332,7 +289,7 @@ class _SectionCard extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
-              child: Text(title, style: AppStyles.label),
+              child: Text(title, style: AppStyles.label(context)),
             ),
             ...children,
             const SizedBox(height: 4),
@@ -353,19 +310,20 @@ class _SettingsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-      leading: Icon(icon, color: AppColors.textSecondary, size: 22),
-      title: Text(label, style: AppStyles.body),
+      leading: Icon(icon, color: colors.textSecondary, size: 22),
+      title: Text(label, style: AppStyles.body(context)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (trailingText != null) ...[
-            Text(trailingText!, style: AppStyles.bodyMuted),
+            Text(trailingText!, style: AppStyles.bodyMuted(context)),
             const SizedBox(width: 6),
           ],
-          const Icon(Icons.chevron_right, color: AppColors.textMuted),
+          Icon(Icons.chevron_right, color: colors.textMuted),
         ],
       ),
     );
@@ -379,11 +337,12 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final accent = Color(entry.colorValue);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
@@ -394,23 +353,23 @@ class _HistoryCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(color: accent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
             alignment: Alignment.center,
-            child: Text(entry.avatarLetter, style: AppStyles.cardTitle.copyWith(color: accent)),
+            child: Text(entry.avatarLetter, style: AppStyles.cardTitle(context).copyWith(color: accent)),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${entry.locationName} - ${entry.serviceName}', style: AppStyles.cardTitle),
+                Text('${entry.locationName} - ${entry.serviceName}', style: AppStyles.cardTitle(context)),
                 const SizedBox(height: 2),
-                Text(entry.dateLabel, style: AppStyles.caption),
+                Text(entry.dateLabel, style: AppStyles.caption(context)),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(color: AppColors.successLight, borderRadius: BorderRadius.circular(20)),
-            child: Text('Served', style: AppStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.w700)),
+            decoration: BoxDecoration(color: colors.successLight, borderRadius: BorderRadius.circular(20)),
+            child: Text('Served', style: AppStyles.caption(context).copyWith(color: colors.success, fontWeight: FontWeight.w700)),
           ),
         ],
       ),

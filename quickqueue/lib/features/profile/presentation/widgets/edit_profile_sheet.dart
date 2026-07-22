@@ -50,12 +50,13 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         child: SafeArea(
@@ -84,12 +85,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                         height: 4,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.border,
+                          color: colors.border,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
-                    Text('Edit profile', style: AppStyles.sectionTitle.copyWith(fontSize: 18)),
+                    Text('Edit profile', style: AppStyles.sectionTitle(context).copyWith(fontSize: 18)),
                     const SizedBox(height: 20),
                     QQTextField(label: 'Full name', hint: 'e.g. My Names', controller: _nameController, validator: Validators.name),
                     const SizedBox(height: 16),

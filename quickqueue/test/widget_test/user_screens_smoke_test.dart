@@ -2,17 +2,61 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:quickqueue/core/navigation/home_shell.dart';
+import 'package:quickqueue/core/navigation/nav_tab_cubit.dart';
 import 'package:quickqueue/core/theme/theme_cubit.dart';
 import 'package:quickqueue/features/auth/presentaton/screens/index_screen.dart';
 import 'package:quickqueue/features/auth/presentaton/screens/register_screen.dart';
-import 'package:quickqueue/features/location/domain/entities/location_entity.dart';
 import 'package:quickqueue/features/location/presentation/screens/locations_screen.dart';
+import 'package:quickqueue/features/profile/data/datasources/profile_remote_datasource.dart';
+import 'package:quickqueue/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:quickqueue/features/profile/domain/usecases/change_password.dart';
+import 'package:quickqueue/features/profile/domain/usecases/get_user_profile.dart';
+import 'package:quickqueue/features/profile/domain/usecases/submit_rating.dart';
+import 'package:quickqueue/features/profile/domain/usecases/update_preferences.dart';
+import 'package:quickqueue/features/profile/domain/usecases/update_profile.dart';
+import 'package:quickqueue/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:quickqueue/features/profile/presentation/screens/rating_screen.dart';
-import 'package:quickqueue/features/profile/presentation/screens/user_profile_screen.dart';
-import 'package:quickqueue/features/queue/domain/entities/ticket_entity.dart';
-import 'package:quickqueue/features/queue/presentation/screens/my_ticket_screen.dart';
-import 'package:quickqueue/features/queue/presentation/screens/notifications_screen.dart';
-import 'package:quickqueue/features/queue/presentation/screens/services_screens.dart';
+import 'package:quickqueue/features/queue/data/datasources/queue_remote_datasource.dart';
+import 'package:quickqueue/features/queue/data/repositories/queue_repository_impl.dart';
+import 'package:quickqueue/features/queue/domain/usecases/get_notifications.dart';
+import 'package:quickqueue/features/queue/domain/usecases/get_queue_position.dart';
+import 'package:quickqueue/features/queue/domain/usecases/get_queues.dart';
+import 'package:quickqueue/features/queue/domain/usecases/join_queue.dart';
+import 'package:quickqueue/features/queue/domain/usecases/leave_queue.dart';
+import 'package:quickqueue/features/queue/presentation/bloc/queue_bloc.dart';
+
+/// Mirrors the app-root providers wired in lib/main.dart, so tests exercise
+/// the same session-scoped bloc composition as the real app.
+Widget _appProviders({required Widget child}) {
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider(create: (_) => ThemeCubit()),
+      BlocProvider(create: (_) => NavTabCubit()),
+      BlocProvider(create: (_) {
+        final repository = QueueRepositoryImpl(MockQueueRemoteDataSource());
+        return QueueBloc(
+          getQueues: GetQueues(repository),
+          joinQueue: JoinQueue(repository),
+          getQueuePosition: GetQueuePosition(repository),
+          leaveQueue: LeaveQueue(repository),
+          getNotifications: GetNotifications(repository),
+        );
+      }),
+      BlocProvider(create: (_) {
+        final repository = ProfileRepositoryImpl(MockProfileRemoteDataSource());
+        return ProfileBloc(
+          getUserProfile: GetUserProfile(repository),
+          submitRating: SubmitRating(repository),
+          updateProfile: UpdateProfile(repository),
+          changePassword: ChangePassword(repository),
+          updatePreferences: UpdatePreferences(repository),
+        );
+      }),
+    ],
+    child: MaterialApp(home: child),
+  );
+}
 
 void main() {
   testWidgets('IndexScreen renders', (tester) async {
@@ -38,61 +82,64 @@ void main() {
     expect(find.text('Continue'), findsOneWidget);
   });
 
-  testWidgets('ServicesScreen loads queues', (tester) async {
-    const location = LocationEntity(
-      id: 'loc-1',
-      name: 'King Faisal Hospital',
-      area: 'Kigali',
-      district: 'Kacyiru',
-      category: LocationCategory.hospital,
-      colorValue: 0xFF2B7A78,
-      latitude: -1.9436,
-      longitude: 30.0906,
-    );
-    await tester.pumpWidget(const MaterialApp(home: ServicesScreen(location: location)));
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(find.text('General Consultation'), findsOneWidget);
-    expect(find.text('Join selected queue'), findsOneWidget);
+  testWidgets('HomeShell starts on an empty ticket state', (tester) async {
+    await tester.pumpWidget(_appProviders(child: const HomeShell()));
+    await tester.pumpAndSettle();
+    expect(find.text('No active ticket'), findsOneWidget);
+    expect(find.text('Find a queue'), findsOneWidget);
   });
 
-  testWidgets('MyTicketScreen renders ticket', (tester) async {
-    const ticket = TicketEntity(
-      ticketNumber: 'A46',
-      queueName: 'General Consultation',
-      locationName: 'King Faisal',
-      positionInQueue: 6,
-      totalInQueue: 7,
-      nowServingNumber: 'A43',
-      estimatedWaitMinutes: 18,
-      counterLabel: 'C2',
-    );
-    await tester.pumpWidget(const MaterialApp(home: MyTicketScreen(ticket: ticket)));
-    await tester.pump();
-    expect(find.text('A46'), findsOneWidget);
-    expect(find.text('Leave queue'), findsOneWidget);
-  });
+  testWidgets(
+    'joining a queue from the shell shows the ticket, and switching tabs no longer loses it',
+    (tester) async {
+      await tester.pumpWidget(_appProviders(child: const HomeShell()));
+      await tester.pumpAndSettle();
 
-  testWidgets('NotificationsScreen loads notifications', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: NotificationsScreen()));
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Queue joined successfully'), findsOneWidget);
-  });
+      // Ticket tab -> find a queue -> Locations -> Services -> join.
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Find a queue'));
+      await tester.pumpAndSettle();
+      expect(find.text('King Faisal Hospital'), findsWidgets);
 
-  testWidgets('UserProfileScreen loads profile', (tester) async {
-    await tester.pumpWidget(
-      BlocProvider(
-        create: (_) => ThemeCubit(),
-        child: const MaterialApp(home: UserProfileScreen()),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(find.text('Recent queue history'), findsOneWidget);
-    expect(find.text('Appearance'), findsOneWidget);
-  });
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Continue'));
+      await tester.pumpAndSettle();
+      expect(find.text('General Consultation'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Join selected queue'));
+      await tester.pumpAndSettle();
+
+      // Joining pops back to the shell's Ticket tab with the new ticket.
+      expect(find.text('Leave queue'), findsOneWidget);
+      expect(find.text('No active ticket'), findsNothing);
+
+      // Regression check: switching to Alerts then Profile then back to
+      // Ticket must NOT strand the user or lose the active ticket — this is
+      // the exact bug being fixed (pushReplacement/pop losing the route).
+      await tester.tap(find.text('Alerts'));
+      await tester.pumpAndSettle();
+      expect(find.text('Leave queue'), findsNothing);
+
+      await tester.tap(find.text('Profile'));
+      await tester.pumpAndSettle();
+      expect(find.text('Recent queue history'), findsOneWidget);
+      expect(find.text('Appearance'), findsOneWidget);
+
+      await tester.tap(find.text('Ticket'));
+      await tester.pumpAndSettle();
+      expect(find.text('Leave queue'), findsOneWidget);
+
+      // Run the mock's position simulation through to "served" (it ticks
+      // down every 5 fake seconds) so its internal timer cancels itself,
+      // rather than leaving a pending Timer for flutter_test's teardown
+      // check to trip on.
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(seconds: 5));
+      }
+    },
+  );
 
   testWidgets('RatingScreen requires a star before submit is enabled', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: RatingScreen(serviceName: 'General Consultation', roomLabel: 'Room - C2'),
+    await tester.pumpWidget(_appProviders(
+      child: const RatingScreen(serviceName: 'General Consultation', roomLabel: 'Room - C2'),
     ));
     await tester.pump();
     expect(find.text('Service completed'), findsOneWidget);

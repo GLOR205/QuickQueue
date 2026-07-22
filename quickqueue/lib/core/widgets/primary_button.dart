@@ -10,7 +10,7 @@ class QQButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.variant = QQButtonVariant.filled,
-    this.color = AppColors.primary,
+    this.color,
     this.isLoading = false,
     this.icon,
   });
@@ -18,12 +18,15 @@ class QQButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final QQButtonVariant variant;
-  final Color color;
+
+  /// Defaults to the theme's primary color when omitted.
+  final Color? color;
   final bool isLoading;
   final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
+    final color = this.color ?? context.colors.primary;
     final child = isLoading
         ? SizedBox(
             height: 20,

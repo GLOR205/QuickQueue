@@ -45,12 +45,13 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         child: SafeArea(
@@ -79,12 +80,12 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                         height: 4,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.border,
+                          color: colors.border,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
-                    Text('Change password', style: AppStyles.sectionTitle.copyWith(fontSize: 18)),
+                    Text('Change password', style: AppStyles.sectionTitle(context).copyWith(fontSize: 18)),
                     const SizedBox(height: 20),
                     QQTextField(
                       label: 'New password',

@@ -7,7 +7,7 @@ import '../../../../core/constants/app_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../location/presentation/screens/locations_screen.dart';
+import '../../../../core/navigation/home_shell.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -42,12 +42,13 @@ class _SignInSheetState extends State<_SignInSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         child: SafeArea(
@@ -57,7 +58,7 @@ class _SignInSheetState extends State<_SignInSheet> {
               if (state.status == AuthStatus.success) {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LocationsScreen()),
+                  MaterialPageRoute(builder: (_) => const HomeShell()),
                   (route) => false,
                 );
               } else if (state.status == AuthStatus.failure && state.errorMessage != null) {
@@ -78,12 +79,12 @@ class _SignInSheetState extends State<_SignInSheet> {
                         height: 4,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.border,
+                          color: colors.border,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
-                    Text(AppStrings.signIn, style: AppStyles.sectionTitle.copyWith(fontSize: 18)),
+                    Text(AppStrings.signIn, style: AppStyles.sectionTitle(context).copyWith(fontSize: 18)),
                     const SizedBox(height: 20),
                     QQTextField(
                       label: 'Email',

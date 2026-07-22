@@ -4,21 +4,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_styles.dart';
+import '../../../../core/navigation/nav_tab_cubit.dart';
+import '../../../../core/widgets/app_bottom_nav.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../location/presentation/screens/locations_screen.dart';
-import '../../data/datasources/profile_remote_datasource.dart';
-import '../../data/repositories/profile_repository_impl.dart';
-import '../../domain/usecases/change_password.dart';
-import '../../domain/usecases/get_user_profile.dart';
-import '../../domain/usecases/submit_rating.dart';
-import '../../domain/usecases/update_preferences.dart';
-import '../../domain/usecases/update_profile.dart';
+import '../../../queue/presentation/bloc/queue_bloc.dart';
+import '../../../queue/presentation/bloc/queue_event.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 
-class RatingScreen extends StatelessWidget {
+class RatingScreen extends StatefulWidget {
   const RatingScreen({
     super.key,
     required this.serviceName,
@@ -31,35 +27,10 @@ class RatingScreen extends StatelessWidget {
   final double timeSavedHours;
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) {
-        final repository = ProfileRepositoryImpl(MockProfileRemoteDataSource());
-        return ProfileBloc(
-          getUserProfile: GetUserProfile(repository),
-          submitRating: SubmitRating(repository),
-          updateProfile: UpdateProfile(repository),
-          changePassword: ChangePassword(repository),
-          updatePreferences: UpdatePreferences(repository),
-        );
-      },
-      child: _RatingView(serviceName: serviceName, roomLabel: roomLabel, timeSavedHours: timeSavedHours),
-    );
-  }
+  State<RatingScreen> createState() => _RatingScreenState();
 }
 
-class _RatingView extends StatefulWidget {
-  const _RatingView({required this.serviceName, required this.roomLabel, required this.timeSavedHours});
-
-  final String serviceName;
-  final String roomLabel;
-  final double timeSavedHours;
-
-  @override
-  State<_RatingView> createState() => _RatingViewState();
-}
-
-class _RatingViewState extends State<_RatingView> {
+class _RatingScreenState extends State<RatingScreen> {
   int _stars = 0;
   final _commentController = TextEditingController();
 
@@ -70,16 +41,16 @@ class _RatingViewState extends State<_RatingView> {
   }
 
   void _finish(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LocationsScreen()),
-      (route) => false,
-    );
+    context.read<QueueBloc>().add(const QueueLeaveRequested());
+    context.read<NavTabCubit>().select(QQNavTab.ticket);
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state.status == ProfileStatus.submitted) {
@@ -94,10 +65,10 @@ class _RatingViewState extends State<_RatingView> {
           return ListView(
             padding: EdgeInsets.zero,
             children: [
-              const QQHeader(
+              QQHeader(
                 title: AppStrings.youWereServed,
                 subtitle: AppStrings.rateExperienceSubtitle,
-                color: AppColors.success,
+                color: colors.success,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -106,21 +77,21 @@ class _RatingViewState extends State<_RatingView> {
                     Container(
                       width: 72,
                       height: 72,
-                      decoration: const BoxDecoration(color: AppColors.successLight, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: colors.successLight, shape: BoxShape.circle),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.check_rounded, color: AppColors.success, size: 36),
+                      child: Icon(Icons.check_rounded, color: colors.success, size: 36),
                     ),
                     const SizedBox(height: 16),
-                    Text(AppStrings.serviceCompleted, style: AppStyles.sectionTitle.copyWith(fontSize: 17)),
+                    Text(AppStrings.serviceCompleted, style: AppStyles.sectionTitle(context).copyWith(fontSize: 17)),
                     const SizedBox(height: 4),
-                    Text('${widget.serviceName} - ${widget.roomLabel}', style: AppStyles.bodyMuted),
+                    Text('${widget.serviceName} - ${widget.roomLabel}', style: AppStyles.bodyMuted(context)),
                     const SizedBox(height: 8),
                     Text(
                       'Time Saved: ${widget.timeSavedHours}hrs',
-                      style: AppStyles.cardTitle.copyWith(color: AppColors.success),
+                      style: AppStyles.cardTitle(context).copyWith(color: colors.success),
                     ),
                     const SizedBox(height: 24),
-                    Text(AppStrings.rateYourWaitExperience, style: AppStyles.bodyMuted),
+                    Text(AppStrings.rateYourWaitExperience, style: AppStyles.bodyMuted(context)),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -130,7 +101,7 @@ class _RatingViewState extends State<_RatingView> {
                           onPressed: () => setState(() => _stars = index + 1),
                           icon: Icon(
                             filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                            color: AppColors.star,
+                            color: colors.star,
                             size: 34,
                           ),
                         );
@@ -140,31 +111,31 @@ class _RatingViewState extends State<_RatingView> {
                     TextField(
                       controller: _commentController,
                       maxLines: 3,
-                      style: AppStyles.body,
+                      style: AppStyles.body(context),
                       decoration: InputDecoration(
                         hintText: 'Share your experience (optional)',
-                        hintStyle: AppStyles.body.copyWith(color: AppColors.textMuted),
+                        hintStyle: AppStyles.body(context).copyWith(color: colors.textMuted),
                         filled: true,
-                        fillColor: AppColors.surface,
+                        fillColor: colors.surface,
                         contentPadding: const EdgeInsets.all(14),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: colors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: colors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.success, width: 1.5),
+                          borderSide: BorderSide(color: colors.success, width: 1.5),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
                     QQButton(
                       label: AppStrings.submitFeedback,
-                      color: AppColors.success,
+                      color: colors.success,
                       isLoading: state.status == ProfileStatus.submitting,
                       onPressed: _stars == 0
                           ? null
@@ -177,7 +148,7 @@ class _RatingViewState extends State<_RatingView> {
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => _finish(context),
-                      child: Text(AppStrings.cancel, style: AppStyles.bodyMuted),
+                      child: Text(AppStrings.cancel, style: AppStyles.bodyMuted(context)),
                     ),
                   ],
                 ),

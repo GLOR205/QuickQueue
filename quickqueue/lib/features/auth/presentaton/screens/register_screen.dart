@@ -8,7 +8,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../location/presentation/screens/locations_screen.dart';
+import '../../../../core/navigation/home_shell.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/usecases/sign_in_with_email.dart';
@@ -72,13 +72,14 @@ class _RegisterViewState extends State<_RegisterView> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.status == AuthStatus.success) {
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const LocationsScreen()),
+              MaterialPageRoute(builder: (_) => const HomeShell()),
               (route) => false,
             );
           } else if (state.status == AuthStatus.failure && state.errorMessage != null) {
@@ -134,10 +135,10 @@ class _RegisterViewState extends State<_RegisterView> {
                         child: Wrap(
                           alignment: WrapAlignment.center,
                           children: [
-                            Text(AppStrings.alreadyHaveAccount, style: AppStyles.bodyMuted),
+                            Text(AppStrings.alreadyHaveAccount, style: AppStyles.bodyMuted(context)),
                             GestureDetector(
                               onTap: () => showSignInSheet(context, context.read<AuthBloc>()),
-                              child: Text('Signin', style: AppStyles.link),
+                              child: Text('Signin', style: AppStyles.link(context)),
                             ),
                           ],
                         ),
@@ -145,12 +146,12 @@ class _RegisterViewState extends State<_RegisterView> {
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          const Expanded(child: Divider(color: AppColors.border)),
+                          Expanded(child: Divider(color: colors.border)),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('or', style: AppStyles.bodyMuted),
+                            child: Text('or', style: AppStyles.bodyMuted(context)),
                           ),
-                          const Expanded(child: Divider(color: AppColors.border)),
+                          Expanded(child: Divider(color: colors.border)),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -194,15 +195,17 @@ class _SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final chipColor = Color.alphaBlend(colors.textPrimary.withValues(alpha: 0.06), colors.surface);
     return Material(
-      color: const Color(0xFFF0F1F3),
+      color: chipColor,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14),
-          child: Center(child: Text(label, style: AppStyles.label)),
+          child: Center(child: Text(label, style: AppStyles.label(context))),
         ),
       ),
     );
