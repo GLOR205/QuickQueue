@@ -10,6 +10,8 @@ class LocationEntity extends Equatable {
     required this.district,
     required this.category,
     required this.colorValue,
+    required this.latitude,
+    required this.longitude,
   });
 
   final String id;
@@ -21,8 +23,12 @@ class LocationEntity extends Equatable {
   /// ARGB color value used to tint the location's avatar chip.
   final int colorValue;
 
+  final double latitude;
+  final double longitude;
+
   String get avatarLetter => category == LocationCategory.hospital ? 'H' : 'B';
 
   @override
-  List<Object?> get props => [id, name, area, district, category, colorValue];
+  List<Object?> get props =>
+      [id, name, area, district, category, colorValue, latitude, longitude];
 }

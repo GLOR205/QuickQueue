@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -7,9 +8,11 @@ import '../../../../core/constants/app_styles.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../queue/presentation/screens/services_screens.dart';
+import '../../data/datasources/device_location_datasource.dart';
 import '../../data/datasources/location_remote_datasource.dart';
 import '../../data/repositories/location_repository_impl.dart';
 import '../../domain/entities/location_entity.dart';
+import '../../domain/usecases/get_current_position.dart';
 import '../../domain/usecases/get_locations.dart';
 import '../bloc/location_bloc.dart';
 import '../bloc/location_event.dart';
@@ -22,9 +25,14 @@ class LocationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) {
-        final repository = LocationRepositoryImpl(MockLocationRemoteDataSource());
-        return LocationBloc(getLocations: GetLocations(repository))
-          ..add(const LocationsRequested());
+        final repository = LocationRepositoryImpl(
+          MockLocationRemoteDataSource(),
+          GeolocatorDeviceLocationDataSource(),
+        );
+        return LocationBloc(
+          getLocations: GetLocations(repository),
+          getCurrentPosition: GetCurrentPosition(repository),
+        )..add(const LocationsRequested());
       },
       child: const _LocationsView(),
     );
@@ -33,6 +41,17 @@ class LocationsScreen extends StatelessWidget {
 
 class _LocationsView extends StatelessWidget {
   const _LocationsView();
+
+  Future<void> _openDirections(BuildContext context, LocationEntity location) async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
+    );
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Could not open maps')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +64,14 @@ class _LocationsView extends StatelessWidget {
             subtitle: AppStrings.selectLocationSubtitle,
           ),
           Expanded(
-            child: BlocBuilder<LocationBloc, LocationState>(
+            child: BlocConsumer<LocationBloc, LocationState>(
+              listenWhen: (previous, current) =>
+                  previous.locateErrorMessage != current.locateErrorMessage &&
+                  current.locateErrorMessage != null,
+              listener: (context, state) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(state.locateErrorMessage!)));
+              },
               builder: (context, state) {
                 if (state.status == LocationStatus.loading || state.status == LocationStatus.initial) {
                   return const Center(child: CircularProgressIndicator(color: AppColors.primary));
@@ -60,7 +86,44 @@ class _LocationsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Welcome User', style: AppStyles.sectionTitle.copyWith(color: AppColors.primary)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Welcome User',
+                              style: AppStyles.sectionTitle.copyWith(color: AppColors.primary),
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: state.locatingUser
+                                ? null
+                                : () => context
+                                    .read<LocationBloc>()
+                                    .add(const UseCurrentLocationRequested()),
+                            icon: state.locatingUser
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : Icon(
+                                    state.userPosition == null
+                                        ? Icons.my_location
+                                        : Icons.location_on,
+                                    size: 16,
+                                  ),
+                            label: Text(
+                              state.userPosition == null ? 'Use my location' : 'Nearest first',
+                              style: AppStyles.link.copyWith(fontSize: 12),
+                            ),
+                            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        "Don't know exactly where a place is? Use your location or tap the pin to get directions.",
+                        style: AppStyles.caption,
+                      ),
                       const SizedBox(height: 14),
                       TextField(
                         onChanged: (value) =>
@@ -100,7 +163,9 @@ class _LocationsView extends StatelessWidget {
                                   return _LocationCard(
                                     location: location,
                                     isSelected: isSelected,
+                                    distanceKm: state.distanceKm(location),
                                     onTap: () => context.read<LocationBloc>().add(LocationSelected(location)),
+                                    onDirections: () => _openDirections(context, location),
                                   );
                                 },
                               ),
@@ -129,11 +194,19 @@ class _LocationsView extends StatelessWidget {
 }
 
 class _LocationCard extends StatelessWidget {
-  const _LocationCard({required this.location, required this.isSelected, required this.onTap});
+  const _LocationCard({
+    required this.location,
+    required this.isSelected,
+    required this.onTap,
+    required this.onDirections,
+    this.distanceKm,
+  });
 
   final LocationEntity location;
   final bool isSelected;
+  final double? distanceKm;
   final VoidCallback onTap;
+  final VoidCallback onDirections;
 
   @override
   Widget build(BuildContext context) {
@@ -175,9 +248,19 @@ class _LocationCard extends StatelessWidget {
                   children: [
                     Text(location.name, style: AppStyles.cardTitle),
                     const SizedBox(height: 2),
-                    Text('${location.area}, ${location.district}', style: AppStyles.bodyMuted),
+                    Text(
+                      distanceKm == null
+                          ? '${location.area}, ${location.district}'
+                          : '${location.area}, ${location.district} · ${distanceKm!.toStringAsFixed(1)} km away',
+                      style: AppStyles.bodyMuted,
+                    ),
                   ],
                 ),
+              ),
+              IconButton(
+                onPressed: onDirections,
+                tooltip: 'Get directions',
+                icon: const Icon(Icons.directions_outlined, color: AppColors.primary),
               ),
             ],
           ),

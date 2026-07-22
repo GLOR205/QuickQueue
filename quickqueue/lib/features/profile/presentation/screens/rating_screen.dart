@@ -9,8 +9,11 @@ import '../../../../core/widgets/primary_button.dart';
 import '../../../location/presentation/screens/locations_screen.dart';
 import '../../data/datasources/profile_remote_datasource.dart';
 import '../../data/repositories/profile_repository_impl.dart';
+import '../../domain/usecases/change_password.dart';
 import '../../domain/usecases/get_user_profile.dart';
 import '../../domain/usecases/submit_rating.dart';
+import '../../domain/usecases/update_preferences.dart';
+import '../../domain/usecases/update_profile.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -35,6 +38,9 @@ class RatingScreen extends StatelessWidget {
         return ProfileBloc(
           getUserProfile: GetUserProfile(repository),
           submitRating: SubmitRating(repository),
+          updateProfile: UpdateProfile(repository),
+          changePassword: ChangePassword(repository),
+          updatePreferences: UpdatePreferences(repository),
         );
       },
       child: _RatingView(serviceName: serviceName, roomLabel: roomLabel, timeSavedHours: timeSavedHours),

@@ -2,7 +2,16 @@ import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/profile_entity.dart';
 
-enum ProfileStatus { initial, loading, loaded, submitting, submitted, error }
+enum ProfileStatus {
+  initial,
+  loading,
+  loaded,
+  submitting,
+  submitted,
+  updating,
+  updated,
+  error,
+}
 
 class ProfileState extends Equatable {
   const ProfileState({this.status = ProfileStatus.initial, this.profile, this.errorMessage});

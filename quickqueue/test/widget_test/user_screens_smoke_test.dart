@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:quickqueue/core/theme/theme_cubit.dart';
 import 'package:quickqueue/features/auth/presentaton/screens/index_screen.dart';
 import 'package:quickqueue/features/auth/presentaton/screens/register_screen.dart';
 import 'package:quickqueue/features/location/domain/entities/location_entity.dart';
@@ -44,6 +46,8 @@ void main() {
       district: 'Kacyiru',
       category: LocationCategory.hospital,
       colorValue: 0xFF2B7A78,
+      latitude: -1.9436,
+      longitude: 30.0906,
     );
     await tester.pumpWidget(const MaterialApp(home: ServicesScreen(location: location)));
     await tester.pump(const Duration(milliseconds: 600));
@@ -75,9 +79,15 @@ void main() {
   });
 
   testWidgets('UserProfileScreen loads profile', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: UserProfileScreen()));
+    await tester.pumpWidget(
+      BlocProvider(
+        create: (_) => ThemeCubit(),
+        child: const MaterialApp(home: UserProfileScreen()),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Recent queue history'), findsOneWidget);
+    expect(find.text('Appearance'), findsOneWidget);
   });
 
   testWidgets('RatingScreen requires a star before submit is enabled', (tester) async {

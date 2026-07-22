@@ -30,3 +30,7 @@ class LocationSelected extends LocationEvent {
   @override
   List<Object?> get props => [location];
 }
+
+class UseCurrentLocationRequested extends LocationEvent {
+  const UseCurrentLocationRequested();
+}
