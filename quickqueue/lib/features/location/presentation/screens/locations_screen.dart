@@ -19,7 +19,9 @@ import '../bloc/location_event.dart';
 import '../bloc/location_state.dart';
 
 class LocationsScreen extends StatelessWidget {
-  const LocationsScreen({super.key});
+  const LocationsScreen({super.key, required this.category});
+
+  final LocationCategory category;
 
   @override
   Widget build(BuildContext context) {
@@ -32,15 +34,23 @@ class LocationsScreen extends StatelessWidget {
         return LocationBloc(
           getLocations: GetLocations(repository),
           getCurrentPosition: GetCurrentPosition(repository),
+          category: category,
         )..add(const LocationsRequested());
       },
-      child: const _LocationsView(),
+      child: _LocationsView(category: category),
     );
   }
 }
 
 class _LocationsView extends StatelessWidget {
-  const _LocationsView();
+  const _LocationsView({required this.category});
+
+  final LocationCategory category;
+
+  String get _categoryLabel => category == LocationCategory.hospital ? 'Hospitals' : 'Banks';
+
+  String get _headerSubtitle =>
+      category == LocationCategory.hospital ? 'Select a hospital to join' : 'Select a bank to join';
 
   Future<void> _openDirections(BuildContext context, LocationEntity location) async {
     final uri = Uri.parse(
@@ -74,9 +84,9 @@ class _LocationsView extends StatelessWidget {
       backgroundColor: colors.background,
       body: Column(
         children: [
-          const QQHeader(
-            title: AppStrings.whereAreYouGoing,
-            subtitle: AppStrings.selectLocationSubtitle,
+          QQHeader(
+            title: _categoryLabel,
+            subtitle: _headerSubtitle,
           ),
           Expanded(
             child: BlocConsumer<LocationBloc, LocationState>(
@@ -97,10 +107,24 @@ class _LocationsView extends StatelessWidget {
 
                 final locations = state.filteredLocations;
                 return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      InkWell(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.arrow_back, size: 16, color: colors.primary),
+                              const SizedBox(width: 6),
+                              Text(AppStrings.backToCategories, style: AppStyles.link(context)),
+                            ],
+                          ),
+                        ),
+                      ),
                       Row(
                         children: [
                           Expanded(

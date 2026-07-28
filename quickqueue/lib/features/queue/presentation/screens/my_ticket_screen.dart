@@ -6,7 +6,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_styles.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../location/presentation/screens/locations_screen.dart';
+import '../../../location/presentation/screens/location_categories_screen.dart';
 import '../../../profile/presentation/screens/rating_screen.dart';
 import '../../domain/entities/ticket_entity.dart';
 import '../bloc/queue_bloc.dart';
@@ -210,7 +210,7 @@ class _EmptyTicketState extends StatelessWidget {
             QQButton(
               label: 'Find a queue',
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const LocationsScreen()),
+                MaterialPageRoute(builder: (_) => const LocationCategoriesScreen()),
               ),
             ),
           ],

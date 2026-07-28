@@ -7,6 +7,7 @@ import 'package:quickqueue/core/navigation/nav_tab_cubit.dart';
 import 'package:quickqueue/core/theme/theme_cubit.dart';
 import 'package:quickqueue/features/auth/presentaton/screens/index_screen.dart';
 import 'package:quickqueue/features/auth/presentaton/screens/register_screen.dart';
+import 'package:quickqueue/features/location/domain/entities/location_entity.dart';
 import 'package:quickqueue/features/location/presentation/screens/locations_screen.dart';
 import 'package:quickqueue/features/profile/data/datasources/profile_remote_datasource.dart';
 import 'package:quickqueue/features/profile/data/repositories/profile_repository_impl.dart';
@@ -75,10 +76,13 @@ void main() {
     expect(find.text('Full name is required'), findsOneWidget);
   });
 
-  testWidgets('LocationsScreen loads locations', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: LocationsScreen()));
+  testWidgets('LocationsScreen loads locations for its category', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: LocationsScreen(category: LocationCategory.hospital)),
+    );
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('King Faisal Hospital'), findsOneWidget);
+    expect(find.text('Bank of Kigali'), findsNothing);
     expect(find.text('Continue'), findsOneWidget);
   });
 
@@ -95,8 +99,12 @@ void main() {
       await tester.pumpWidget(_appProviders(child: const HomeShell()));
       await tester.pumpAndSettle();
 
-      // Ticket tab -> find a queue -> Locations -> Services -> join.
+      // Ticket tab -> find a queue -> categories -> Locations -> Services -> join.
       await tester.tap(find.widgetWithText(ElevatedButton, 'Find a queue'));
+      await tester.pumpAndSettle();
+      expect(find.text('Hospital Services'), findsOneWidget);
+
+      await tester.tap(find.text('Hospital Services'));
       await tester.pumpAndSettle();
       expect(find.text('King Faisal Hospital'), findsWidgets);
 
