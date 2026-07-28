@@ -82,7 +82,8 @@ class _RegisterViewState extends State<_RegisterView> {
               MaterialPageRoute(builder: (_) => const HomeShell()),
               (route) => false,
             );
-          } else if (state.status == AuthStatus.failure && state.errorMessage != null) {
+          } else if (state.status == AuthStatus.failure &&
+              state.errorMessage != null) {
             ScaffoldMessenger.of(context)
                 .showSnackBar(SnackBar(content: Text(state.errorMessage!)));
           }
@@ -97,86 +98,116 @@ class _RegisterViewState extends State<_RegisterView> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      QQTextField(
-                        label: 'Full name',
-                        hint: 'e.g. My Names',
-                        controller: _nameController,
-                        validator: Validators.name,
-                      ),
-                      const SizedBox(height: 16),
-                      QQTextField(
-                        label: 'Email',
-                        hint: 'mynames@gmail.com',
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: Validators.email,
-                      ),
-                      const SizedBox(height: 16),
-                      QQTextField(
-                        label: 'Password',
-                        hint: '********',
-                        controller: _passwordController,
-                        obscureText: true,
-                        validator: Validators.password,
-                      ),
-                      const SizedBox(height: 24),
-                      QQButton(
-                        label: AppStrings.createAccount,
-                        isLoading: state.status == AuthStatus.loading,
-                        onPressed: () => _submit(context),
-                      ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(AppStrings.alreadyHaveAccount, style: AppStyles.bodyMuted(context)),
-                            GestureDetector(
-                              onTap: () => showSignInSheet(context, context.read<AuthBloc>()),
-                              child: Text('Signin', style: AppStyles.link(context)),
-                            ),
+                            Icon(Icons.arrow_back,
+                                size: 16, color: colors.primary),
+                            const SizedBox(width: 6),
+                            Text(AppStrings.backToHome,
+                                style: AppStyles.link(context)),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      Row(
+                    ),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(child: Divider(color: colors.border)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('or', style: AppStyles.bodyMuted(context)),
+                          QQTextField(
+                            label: 'Full name',
+                            hint: 'e.g. My Names',
+                            controller: _nameController,
+                            validator: Validators.name,
                           ),
-                          Expanded(child: Divider(color: colors.border)),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _SocialButton(
-                              label: 'Google',
-                              onTap: () =>
-                                  context.read<AuthBloc>().add(const GoogleSignInRequested()),
+                          const SizedBox(height: 16),
+                          QQTextField(
+                            label: 'Email',
+                            hint: 'mynames@gmail.com',
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: Validators.email,
+                          ),
+                          const SizedBox(height: 16),
+                          QQTextField(
+                            label: 'Password',
+                            hint: '********',
+                            controller: _passwordController,
+                            obscureText: true,
+                            validator: Validators.password,
+                          ),
+                          const SizedBox(height: 24),
+                          QQButton(
+                            label: AppStrings.createAccount,
+                            isLoading: state.status == AuthStatus.loading,
+                            onPressed: () => _submit(context),
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              children: [
+                                Text(AppStrings.alreadyHaveAccount,
+                                    style: AppStyles.bodyMuted(context)),
+                                GestureDetector(
+                                  onTap: () => showSignInSheet(
+                                      context, context.read<AuthBloc>()),
+                                  child: Text('Signin',
+                                      style: AppStyles.link(context)),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _SocialButton(
-                              label: 'Apple',
-                              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Apple sign-in is coming soon')),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: colors.border)),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('or',
+                                    style: AppStyles.bodyMuted(context)),
                               ),
-                            ),
+                              Expanded(child: Divider(color: colors.border)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _SocialButton(
+                                  label: 'Google',
+                                  onTap: () => context
+                                      .read<AuthBloc>()
+                                      .add(const GoogleSignInRequested()),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _SocialButton(
+                                  label: 'Apple',
+                                  onTap: () => ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Apple sign-in is coming soon')),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -196,7 +227,8 @@ class _SocialButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final chipColor = Color.alphaBlend(colors.textPrimary.withValues(alpha: 0.06), colors.surface);
+    final chipColor = Color.alphaBlend(
+        colors.textPrimary.withValues(alpha: 0.06), colors.surface);
     return Material(
       color: chipColor,
       borderRadius: BorderRadius.circular(12),

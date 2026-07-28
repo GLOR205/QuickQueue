@@ -27,6 +27,21 @@ class LocationCategoriesScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.arrow_back, size: 16, color: colors.primary),
+                        const SizedBox(width: 6),
+                        Text(AppStrings.backToHome,
+                            style: AppStyles.link(context)),
+                      ],
+                    ),
+                  ),
+                ),
                 _CategoryCard(
                   icon: Icons.local_hospital_outlined,
                   accent: colors.avatarPalette[0],
@@ -34,7 +49,8 @@ class LocationCategoriesScreen extends StatelessWidget {
                   subtitle: 'Consultations, labs, pharmacy & more',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const LocationsScreen(category: LocationCategory.hospital),
+                      builder: (_) => const LocationsScreen(
+                          category: LocationCategory.hospital),
                     ),
                   ),
                 ),
@@ -46,7 +62,8 @@ class LocationCategoriesScreen extends StatelessWidget {
                   subtitle: 'Tellers, account services & more',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const LocationsScreen(category: LocationCategory.bank),
+                      builder: (_) => const LocationsScreen(
+                          category: LocationCategory.bank),
                     ),
                   ),
                 ),
@@ -87,7 +104,12 @@ class _CategoryCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2))
+            ],
           ),
           child: Row(
             children: [
@@ -106,7 +128,9 @@ class _CategoryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: AppStyles.cardTitle(context).copyWith(fontSize: 16)),
+                    Text(title,
+                        style: AppStyles.cardTitle(context)
+                            .copyWith(fontSize: 16)),
                     const SizedBox(height: 2),
                     Text(subtitle, style: AppStyles.bodyMuted(context)),
                   ],

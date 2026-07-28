@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_styles.dart';
 import '../../../../core/widgets/app_header.dart';
 
@@ -23,6 +24,23 @@ class StaffLoginScreen extends StatelessWidget {
             title: 'Staff Login',
             subtitle: 'Sign in to manage your queue',
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back, size: 16, color: colors.primary),
+                    const SizedBox(width: 6),
+                    Text(AppStrings.backToHome, style: AppStyles.link(context)),
+                  ],
+                ),
+              ),
+            ),
+          ),
           Expanded(
             child: Center(
               child: Padding(
@@ -30,9 +48,11 @@ class StaffLoginScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.badge_outlined, size: 56, color: colors.textMuted),
+                    Icon(Icons.badge_outlined,
+                        size: 56, color: colors.textMuted),
                     const SizedBox(height: 16),
-                    Text('Staff login coming soon', style: AppStyles.sectionTitle(context)),
+                    Text('Staff login coming soon',
+                        style: AppStyles.sectionTitle(context)),
                     const SizedBox(height: 8),
                     Text(
                       "This screen is being built out separately for staff accounts.",
