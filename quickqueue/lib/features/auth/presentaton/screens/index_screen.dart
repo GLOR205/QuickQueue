@@ -102,3 +102,4 @@ class _IndexView extends StatelessWidget {
     );
   }
 }
+
