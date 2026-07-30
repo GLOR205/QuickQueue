@@ -6,7 +6,7 @@ import 'queue_state.dart';
 
 class QueueBloc extends Bloc<QueueEvent, QueueState> {
   final FirebaseFirestore firestore;
-  const Uuid _uuid = Uuid();
+  final Uuid _uuid = const Uuid();
 
   QueueBloc({required this.firestore}) : super(const QueueInitial()) {
     on<JoinQueueEvent>(_onJoinQueue);
