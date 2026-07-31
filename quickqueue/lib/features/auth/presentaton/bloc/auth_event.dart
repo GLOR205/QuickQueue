@@ -23,6 +23,14 @@ class SignInRequested extends AuthEvent {
 
   final String email;
   final String password;
+class SignInWithEmailEvent extends AuthEvent {
+  final String email;
+  final String password;
+
+  const SignInWithEmailEvent({
+    required this.email,
+    required this.password,
+  });
 
   @override
   List<Object?> get props => [email, password];
@@ -34,4 +42,30 @@ class GoogleSignInRequested extends AuthEvent {
 
 class SignOutRequested extends AuthEvent {
   const SignOutRequested();
+}
+class SignInWithGoogleEvent extends AuthEvent {
+  const SignInWithGoogleEvent();
+}
+
+class SignOutEvent extends AuthEvent {
+  const SignOutEvent();
+}
+
+class CheckAuthStatusEvent extends AuthEvent {
+  const CheckAuthStatusEvent();
+}
+
+class RegisterWithEmailEvent extends AuthEvent {
+  final String email;
+  final String password;
+  final String fullName;
+
+  const RegisterWithEmailEvent({
+    required this.email,
+    required this.password,
+    required this.fullName,
+  });
+
+  @override
+  List<Object?> get props => [email, password, fullName];
 }
