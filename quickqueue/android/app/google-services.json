@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1055252011970",
+    "project_id": "quickqueue-rw",
+    "storage_bucket": "quickqueue-rw.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055252011970:android:b3f1f1e2370a846d17145b",
+        "android_client_info": {
+          "package_name": "com.example.quickqueue"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1055252011970-ic4a7r6smt4o738laf6ijm5nlvgfl6ig.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB58_2jooWXPyGLHYLT08QJo9eOynvvwMY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1055252011970-ic4a7r6smt4o738laf6ijm5nlvgfl6ig.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

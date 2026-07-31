@@ -1,0 +1,101 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/app_styles.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../domain/usecases/sign_in_with_email.dart';
+import '../../domain/usecases/sign_in_with_google.dart';
+import '../../domain/usecases/sign_out.dart';
+import '../../domain/usecases/sign_up_with_email.dart';
+import '../bloc/auth_bloc.dart';
+import '../widgets/sign_in_sheet.dart';
+import 'register_screen.dart';
+import '../../../staff/presentation/screens/staff_login_screen.dart';
+
+class IndexScreen extends StatelessWidget {
+  const IndexScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AuthBloc(
+        signInWithEmail: sl<SignInWithEmail>(),
+        signInWithGoogle: sl<SignInWithGoogle>(),
+        signUpWithEmail: sl<SignUpWithEmail>(),
+        signOut: sl<SignOut>(),
+      ),
+      child: const _IndexView(),
+    );
+  }
+}
+
+class _IndexView extends StatelessWidget {
+  const _IndexView();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            children: [
+              const Spacer(flex: 3),
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                alignment: Alignment.center,
+                child: Text('QQ', style: AppStyles.headerTitle.copyWith(fontSize: 28)),
+              ),
+              const SizedBox(height: 24),
+              Text(AppStrings.appName, style: AppStyles.displayTitle(context)),
+              const SizedBox(height: 10),
+              Text(
+                AppStrings.appTagline,
+                textAlign: TextAlign.center,
+                style: AppStyles.bodyMuted(context),
+              ),
+              const Spacer(flex: 4),
+              QQButton(
+                label: AppStrings.getStarted,
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              QQButton(
+                label: AppStrings.signIn,
+                variant: QQButtonVariant.outlined,
+                onPressed: () => showSignInSheet(context, context.read<AuthBloc>()),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {},
+                child: Text(AppStrings.forgotPassword, style: AppStyles.bodyMuted(context)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const StaffLoginScreen()),
+                ),
+                child: Text('Login as admin', style: AppStyles.link(context)),
+              ),
+              const Spacer(flex: 2),
+              Text(AppStrings.availableOn, style: AppStyles.caption(context)),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
