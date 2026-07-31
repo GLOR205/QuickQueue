@@ -14,7 +14,7 @@ import '../../domain/usecases/sign_up_with_email.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/sign_in_sheet.dart';
 import 'register_screen.dart';
-import '../../../staff/presentation/screens/staff_login_screen.dart';
+import 'staff_login_screen.dart';
 
 class IndexScreen extends StatelessWidget {
   const IndexScreen({super.key});
