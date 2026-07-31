@@ -4,6 +4,8 @@ feature/user-screens
 import '../../domain/entities/location_entity.dart';
 
 main
+import '../../domain/entities/location_entity.dart';
+
 abstract class LocationEvent extends Equatable {
   const LocationEvent();
 

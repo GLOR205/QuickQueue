@@ -1,5 +1,6 @@
 import '../../domain/entities/location_entity.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 abstract class LocationRemoteDataSource {
   Future<List<LocationEntity>> getLocations();
 }
@@ -57,5 +58,32 @@ class MockLocationRemoteDataSource implements LocationRemoteDataSource {
         longitude: 30.0600,
       ),
     ];
+  }
+}
+class FirebaseLocationRemoteDataSource implements LocationRemoteDataSource {
+  FirebaseLocationRemoteDataSource({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseFirestore _firestore;
+
+  @override
+  Future<List<LocationEntity>> getLocations() async {
+    final snapshot = await _firestore.collection('location').get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      final categoryValue = (data['category'] ?? data['Category'] ?? '') as String;
+      return LocationEntity(
+        id: (data['id'] as String?) ?? doc.id,
+        name: ((data['name'] as String?) ?? '').trim(),
+        area: (data['area'] as String?) ?? '',
+        district: (data['district'] as String?) ?? '',
+        category: categoryValue.toLowerCase() == 'hospital'
+            ? LocationCategory.hospital
+            : LocationCategory.bank,
+        colorValue: (data['colorValue'] as num?)?.toInt() ?? 0xFF2B7A78,
+        latitude: (data['latitude'] as num?)?.toDouble() ?? -1.9441,
+        longitude: (data['longitude'] as num?)?.toDouble() ?? 30.0619,
+      );
+    }).toList();
   }
 }

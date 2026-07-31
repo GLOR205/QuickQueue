@@ -75,6 +75,12 @@ class QueueBloc extends Bloc<QueueEvent, QueueState> {
       );
       emit(state.copyWith(status: QueueStatus.joined, ticket: ticket));
       _watchTicket(ticket.ticketNumber);
+      try {
+        final notifications = await _getNotifications();
+        emit(state.copyWith(notifications: notifications));
+      } catch (_) {
+        // Non-fatal: the join itself already succeeded above.
+      }
     } on AppException catch (e) {
       emit(state.copyWith(status: QueueStatus.error, errorMessage: e.message));
     }

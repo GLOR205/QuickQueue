@@ -5,6 +5,9 @@ import '../../domain/entities/queue_entity.dart';
 import '../../domain/entities/ticket_entity.dart';
 
 main
+import '../../domain/entities/queue_entity.dart';
+import '../../domain/entities/ticket_entity.dart';
+
 abstract class QueueEvent extends Equatable {
   const QueueEvent();
 

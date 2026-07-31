@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../../domain/entities/queue_entity.dart';
 import '../../domain/entities/ticket_entity.dart';
@@ -193,5 +197,180 @@ class MockQueueRemoteDataSource implements QueueRemoteDataSource {
         timeLabel: 'Earlier today',
       ),
     ];
+  }
+}
+
+/// Reads queues from Firestore and persists tickets/notifications there too.
+/// The actual position-ticking-down behavior is still driven by the in-memory
+/// [MockQueueRemoteDataSource] simulator (no staff-side app exists yet to
+/// drive real position updates) — but every tick is mirrored into the
+/// ticket's Firestore doc, and a notification doc is written on join, so
+/// both show up as real, persisted records (profile history, alerts) rather
+/// than disappearing when the session ends.
+class FirebaseQueueRemoteDataSource implements QueueRemoteDataSource {
+  FirebaseQueueRemoteDataSource({FirebaseFirestore? firestore, FirebaseAuth? auth})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
+
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  final MockQueueRemoteDataSource _ticketSimulator = MockQueueRemoteDataSource();
+  final Map<String, StreamSubscription<TicketEntity>> _mirrorSubscriptions = {};
+
+  @override
+  Future<List<QueueEntity>> getQueues(String locationId) async {
+    final snapshot = await _firestore
+        .collection('queues')
+        .where('locationId', isEqualTo: locationId)
+        .get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return QueueEntity(
+        id: data['id'] as String,
+        name: data['name'] as String,
+        waitingCount: (data['waitingCount'] as num).toInt(),
+        estimatedWaitMinutes: (data['estimatedWaitMinutes'] as num).toInt(),
+        isPriority: data['isPriority'] as bool? ?? false,
+        etaLabel: data['etaLabel'] as String?,
+      );
+    }).toList();
+  }
+
+  @override
+  Future<TicketEntity> joinQueue({
+    required String locationId,
+    required String locationName,
+    required QueueEntity queue,
+  }) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      throw const ValidationException('You must be signed in to join a queue.');
+    }
+
+    final ticket = await _ticketSimulator.joinQueue(
+      locationId: locationId,
+      locationName: locationName,
+      queue: queue,
+    );
+
+    var locationColorValue = 0xFF2B7A78;
+    var avatarLetter = 'H';
+    try {
+      final locationData = (await _firestore.collection('location').doc(locationId).get()).data();
+      if (locationData != null) {
+        locationColorValue = (locationData['colorValue'] as num?)?.toInt() ?? locationColorValue;
+        final category = (locationData['category'] ?? locationData['Category'] ?? '') as String;
+        avatarLetter = category.toLowerCase() == 'hospital' ? 'H' : 'B';
+      }
+    } catch (_) {
+      // Best-effort styling only — history still works without exact colors.
+    }
+
+    final ticketDoc = _firestore.collection('tickets').doc(ticket.ticketNumber);
+    await ticketDoc.set({
+      'userId': uid,
+      'ticketNumber': ticket.ticketNumber,
+      'locationId': locationId,
+      'locationName': locationName,
+      'queueId': queue.id,
+      'queueName': ticket.queueName,
+      'positionInQueue': ticket.positionInQueue,
+      'totalInQueue': ticket.totalInQueue,
+      'nowServingNumber': ticket.nowServingNumber,
+      'estimatedWaitMinutes': ticket.estimatedWaitMinutes,
+      'counterLabel': ticket.counterLabel,
+      'status': _statusName(ticket.status),
+      'colorValue': locationColorValue,
+      'avatarLetter': avatarLetter,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    await _firestore.collection('notifications').add({
+      'userId': uid,
+      'type': 'joined',
+      'title': 'Queue joined successfully',
+      'message': 'You joined ${ticket.queueName}. Your number is ${ticket.ticketNumber}.',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    _mirrorSubscriptions.remove(ticket.ticketNumber)?.cancel();
+    _mirrorSubscriptions[ticket.ticketNumber] =
+        _ticketSimulator.watchTicket(ticket.ticketNumber).listen((updated) {
+      ticketDoc.update({
+        'positionInQueue': updated.positionInQueue,
+        'estimatedWaitMinutes': updated.estimatedWaitMinutes,
+        'status': _statusName(updated.status),
+      });
+    });
+
+    return ticket;
+  }
+
+  @override
+  Stream<TicketEntity> watchTicket(String ticketNumber) => _ticketSimulator.watchTicket(ticketNumber);
+
+  @override
+  Future<void> leaveQueue(String ticketNumber) async {
+    await _mirrorSubscriptions.remove(ticketNumber)?.cancel();
+    await _ticketSimulator.leaveQueue(ticketNumber);
+  }
+
+  @override
+  Future<List<NotificationEntity>> getNotifications() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return const [];
+    final snapshot = await _firestore
+        .collection('notifications')
+        .where('userId', isEqualTo: uid)
+        .get();
+    final docs = snapshot.docs.toList()
+      ..sort((a, b) {
+        final aTime = a.data()['createdAt'] as Timestamp?;
+        final bTime = b.data()['createdAt'] as Timestamp?;
+        if (aTime == null || bTime == null) return 0;
+        return bTime.compareTo(aTime);
+      });
+    return docs.map((doc) {
+      final data = doc.data();
+      return NotificationEntity(
+        id: (data['id'] as String?) ?? doc.id,
+        type: _parseNotificationType(data['type'] as String?),
+        title: (data['title'] as String?) ?? '',
+        message: (data['message'] as String?) ?? '',
+        timeLabel: (data['timeLabel'] as String?) ?? _relativeTimeLabel(data['createdAt'] as Timestamp?),
+      );
+    }).toList();
+  }
+
+  NotificationType _parseNotificationType(String? value) {
+    switch (value) {
+      case 'joined':
+        return NotificationType.joined;
+      case 'waitTimeChanged':
+        return NotificationType.waitTimeChanged;
+      default:
+        return NotificationType.positionUpdate;
+    }
+  }
+
+  String _statusName(TicketStatus status) {
+    switch (status) {
+      case TicketStatus.served:
+        return 'served';
+      case TicketStatus.almostReady:
+        return 'almostReady';
+      case TicketStatus.waiting:
+        return 'waiting';
+    }
+  }
+
+  String _relativeTimeLabel(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+    final diff = DateTime.now().difference(timestamp.toDate());
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 2) return 'Yesterday';
+    return '${diff.inDays}d ago';
   }
 }

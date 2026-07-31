@@ -11,6 +11,7 @@ import '../../../queue/presentation/screens/services_screens.dart';
 import '../../data/datasources/device_location_datasource.dart';
 import '../../data/datasources/location_remote_datasource.dart';
 import '../../data/repositories/location_repository_impl.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../domain/entities/location_entity.dart';
 import '../../domain/usecases/get_current_position.dart';
 import '../../domain/usecases/get_locations.dart';
@@ -37,6 +38,11 @@ class LocationsScreen extends StatelessWidget {
           category: category,
         )..add(const LocationsRequested());
       },
+      create: (_) => LocationBloc(
+        getLocations: sl<GetLocations>(),
+        getCurrentPosition: sl<GetCurrentPosition>(),
+        category: category,
+      )..add(const LocationsRequested()),
       child: _LocationsView(category: category),
     );
   }

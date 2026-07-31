@@ -11,6 +11,7 @@ import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/navigation/home_shell.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../domain/usecases/sign_in_with_email.dart';
 import '../../domain/usecases/sign_in_with_google.dart';
 import '../../domain/usecases/sign_out.dart';
@@ -35,6 +36,12 @@ class RegisterScreen extends StatelessWidget {
           signOut: SignOut(repository),
         );
       },
+      create: (_) => AuthBloc(
+        signInWithEmail: sl<SignInWithEmail>(),
+        signInWithGoogle: sl<SignInWithGoogle>(),
+        signUpWithEmail: sl<SignUpWithEmail>(),
+        signOut: sl<SignOut>(),
+      ),
       child: const _RegisterView(),
     );
   }
