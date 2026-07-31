@@ -7,6 +7,7 @@ abstract class ProfileEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+feature/user-screens
 class ProfileRequested extends ProfileEvent {
   const ProfileRequested();
 }
@@ -51,6 +52,7 @@ class PreferencesUpdateRequested extends ProfileEvent {
   @override
   List<Object?> get props => [notificationsEnabled, languageCode];
 }
+
 class LoadUserProfileEvent extends ProfileEvent {
   final String userId;
 
@@ -89,3 +91,4 @@ class SubmitRatingEvent extends ProfileEvent {
   @override
   List<Object?> get props => [ticketId, rating, comment];
 }
+main

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+feature/user-screens
 
 import '../../domain/entities/user_entity.dart';
 
@@ -22,6 +23,7 @@ class AuthState extends Equatable {
   @override
   List<Object?> get props => [status, user, errorMessage];
 }
+
 import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class AuthState extends Equatable {
@@ -69,3 +71,4 @@ class AuthRegistrationSuccess extends AuthState {
   @override
   List<Object?> get props => [user];
 }
+main

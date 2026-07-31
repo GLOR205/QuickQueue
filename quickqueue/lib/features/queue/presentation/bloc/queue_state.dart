@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+feature/user-screens
 import '../../domain/entities/notification_entity.dart';
 import '../../domain/entities/queue_entity.dart';
 import '../../domain/entities/ticket_entity.dart';
@@ -57,6 +58,7 @@ class QueueState extends Equatable {
   List<Object?> get props =>
       [status, queues, selectedQueue, ticket, notifications, errorMessage];
 }
+
 abstract class QueueState extends Equatable {
   const QueueState();
 
@@ -147,3 +149,4 @@ class QueueServed extends QueueState {
   @override
   List<Object?> get props => [ticketNumber, timeSaved];
 }
+main

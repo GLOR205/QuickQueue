@@ -1,3 +1,4 @@
+feature/user-screens
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -130,6 +131,7 @@ class QueueBloc extends Bloc<QueueEvent, QueueState> {
     return super.close();
   }
 }
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
@@ -300,3 +302,4 @@ class QueueBloc extends Bloc<QueueEvent, QueueState> {
     ));
   }
 }
+main

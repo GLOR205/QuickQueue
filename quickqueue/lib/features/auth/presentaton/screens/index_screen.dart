@@ -5,6 +5,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_styles.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../domain/usecases/sign_in_with_email.dart';
 import '../../domain/usecases/sign_in_with_google.dart';
@@ -13,6 +15,7 @@ import '../../domain/usecases/sign_up_with_email.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/sign_in_sheet.dart';
 import 'register_screen.dart';
+import 'staff_login_screen.dart';
 import '../../../staff/presentation/screens/staff_login_screen.dart';
 
 class IndexScreen extends StatelessWidget {
@@ -21,6 +24,15 @@ class IndexScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      create: (_) {
+        final repository = AuthRepositoryImpl(MockAuthRemoteDataSource());
+        return AuthBloc(
+          signInWithEmail: SignInWithEmail(repository),
+          signInWithGoogle: SignInWithGoogle(repository),
+          signUpWithEmail: SignUpWithEmail(repository),
+          signOut: SignOut(repository),
+        );
+      },
       create: (_) => AuthBloc(
         signInWithEmail: sl<SignInWithEmail>(),
         signInWithGoogle: sl<SignInWithGoogle>(),

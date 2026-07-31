@@ -1,15 +1,19 @@
+feature/user-screens
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/location_entity.dart';
 import '../../domain/usecases/get_current_position.dart';
 import '../../domain/usecases/get_locations.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+main
 import 'location_event.dart';
 import 'location_state.dart';
 
 class LocationBloc extends Bloc<LocationEvent, LocationState> {
+feature/user-screens
   LocationBloc({
     required GetLocations getLocations,
     required GetCurrentPosition getCurrentPosition,
@@ -64,6 +68,7 @@ class LocationBloc extends Bloc<LocationEvent, LocationState> {
     }
   }
 }
+
   final FirebaseFirestore firestore;
 
   LocationBloc({required this.firestore}) : super(const LocationInitial()) {
@@ -176,3 +181,4 @@ class LocationBloc extends Bloc<LocationEvent, LocationState> {
     }
   }
 }
+main

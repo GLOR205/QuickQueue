@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+feature/user-screens
 import 'package:geolocator/geolocator.dart';
 
 import '../../domain/entities/coordinates.dart';
@@ -93,6 +94,7 @@ class LocationState extends Equatable {
       ];
 }
 
+
 abstract class LocationState extends Equatable {
   const LocationState();
 
@@ -147,3 +149,4 @@ class LocationError extends LocationState {
   @override
   List<Object?> get props => [message];
 }
+main

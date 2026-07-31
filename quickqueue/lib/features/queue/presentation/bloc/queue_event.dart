@@ -1,5 +1,10 @@
 import 'package:equatable/equatable.dart';
 
+feature/user-screens
+import '../../domain/entities/queue_entity.dart';
+import '../../domain/entities/ticket_entity.dart';
+
+main
 import '../../domain/entities/queue_entity.dart';
 import '../../domain/entities/ticket_entity.dart';
 
@@ -10,6 +15,7 @@ abstract class QueueEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+feature/user-screens
 class QueuesRequested extends QueueEvent {
   const QueuesRequested(this.locationId);
 
@@ -63,6 +69,7 @@ class QueueLeaveRequested extends QueueEvent {
 class NotificationsRequested extends QueueEvent {
   const NotificationsRequested();
 }
+
 class JoinQueueEvent extends QueueEvent {
   final String serviceId;
   final String locationId;
@@ -117,3 +124,4 @@ class QueueUpdatedEvent extends QueueEvent {
   @override
   List<Object?> get props => [queueData];
 }
+main

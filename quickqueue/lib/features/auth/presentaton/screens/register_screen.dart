@@ -9,6 +9,8 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/navigation/home_shell.dart';
+import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../domain/usecases/sign_in_with_email.dart';
 import '../../domain/usecases/sign_in_with_google.dart';
@@ -25,6 +27,15 @@ class RegisterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      create: (_) {
+        final repository = AuthRepositoryImpl(MockAuthRemoteDataSource());
+        return AuthBloc(
+          signInWithEmail: SignInWithEmail(repository),
+          signInWithGoogle: SignInWithGoogle(repository),
+          signUpWithEmail: SignUpWithEmail(repository),
+          signOut: SignOut(repository),
+        );
+      },
       create: (_) => AuthBloc(
         signInWithEmail: sl<SignInWithEmail>(),
         signInWithGoogle: sl<SignInWithGoogle>(),

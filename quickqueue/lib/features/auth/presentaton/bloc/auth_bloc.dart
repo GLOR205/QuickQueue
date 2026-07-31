@@ -1,3 +1,4 @@
+feature/user-screens
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -5,13 +6,16 @@ import '../../domain/usecases/sign_in_with_email.dart';
 import '../../domain/usecases/sign_in_with_google.dart';
 import '../../domain/usecases/sign_out.dart';
 import '../../domain/usecases/sign_up_with_email.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+main
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
+feature/user-screens
   AuthBloc({
     required SignInWithEmail signInWithEmail,
     required SignInWithGoogle signInWithGoogle,
@@ -68,6 +72,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthState());
   }
 }
+
   final FirebaseAuth firebaseAuth;
   final GoogleSignIn googleSignIn;
 
@@ -166,3 +171,4 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 }
+main

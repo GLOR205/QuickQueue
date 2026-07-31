@@ -1,3 +1,4 @@
+feature/user-screens
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -6,13 +7,16 @@ import '../../domain/usecases/get_user_profile.dart';
 import '../../domain/usecases/submit_rating.dart';
 import '../../domain/usecases/update_preferences.dart';
 import '../../domain/usecases/update_profile.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+main
 import 'profile_event.dart';
 import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
+feature/user-screens
   ProfileBloc({
     required GetUserProfile getUserProfile,
     required SubmitRating submitRating,
@@ -99,6 +103,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 }
+
   final FirebaseFirestore firestore;
   final FirebaseAuth firebaseAuth;
 
@@ -194,3 +199,4 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 }
+main

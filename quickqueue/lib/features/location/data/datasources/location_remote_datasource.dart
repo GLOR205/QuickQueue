@@ -1,4 +1,5 @@
 import '../../domain/entities/location_entity.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 abstract class LocationRemoteDataSource {
   Future<List<LocationEntity>> getLocations();

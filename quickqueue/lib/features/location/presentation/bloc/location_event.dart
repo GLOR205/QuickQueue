@@ -1,5 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+feature/user-screens
+import '../../domain/entities/location_entity.dart';
+
+main
 import '../../domain/entities/location_entity.dart';
 
 abstract class LocationEvent extends Equatable {
@@ -9,6 +13,7 @@ abstract class LocationEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+feature/user-screens
 class LocationsRequested extends LocationEvent {
   const LocationsRequested();
 }
@@ -27,10 +32,12 @@ class SearchLocationsEvent extends LocationEvent {
 
   const SearchLocationsEvent({required this.query});
 
+main
   @override
   List<Object?> get props => [query];
 }
 
+feature/user-screens
 class LocationSelected extends LocationEvent {
   const LocationSelected(this.location);
 
@@ -43,6 +50,7 @@ class LocationSelected extends LocationEvent {
 class UseCurrentLocationRequested extends LocationEvent {
   const UseCurrentLocationRequested();
 }
+
 class SelectLocationEvent extends LocationEvent {
   final String locationId;
 
@@ -60,3 +68,4 @@ class LoadServicesEvent extends LocationEvent {
   @override
   List<Object?> get props => [locationId];
 }
+main

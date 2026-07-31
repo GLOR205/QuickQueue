@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+feature/user-screens
 import '../../domain/entities/profile_entity.dart';
 
 enum ProfileStatus {
@@ -30,6 +31,7 @@ class ProfileState extends Equatable {
   @override
   List<Object?> get props => [status, profile, errorMessage];
 }
+
 abstract class ProfileState extends Equatable {
   const ProfileState();
 
@@ -92,3 +94,4 @@ class ProfileError extends ProfileState {
   @override
   List<Object?> get props => [message];
 }
+main
