@@ -26,10 +26,11 @@ class QQTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppStyles.label),
+        Text(label, style: AppStyles.label(context)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -37,29 +38,29 @@ class QQTextField extends StatelessWidget {
           keyboardType: keyboardType,
           validator: validator,
           maxLines: obscureText ? 1 : maxLines,
-          style: AppStyles.body,
+          style: AppStyles.body(context),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppStyles.body.copyWith(color: AppColors.textMuted),
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.textMuted, size: 20) : null,
+            hintStyle: AppStyles.body(context).copyWith(color: colors.textMuted),
+            prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: colors.textMuted, size: 20) : null,
             filled: true,
-            fillColor: AppColors.surface,
+            fillColor: colors.surface,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: colors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: colors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: colors.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.error),
+              borderSide: BorderSide(color: colors.error),
             ),
           ),
         ),

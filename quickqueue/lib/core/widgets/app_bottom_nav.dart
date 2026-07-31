@@ -12,10 +12,11 @@ class QQBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: SafeArea(
         top: false,
@@ -64,7 +65,8 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : AppColors.textMuted;
+    final colors = context.colors;
+    final color = selected ? colors.primary : colors.textMuted;
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -73,7 +75,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 2),
-            Text(label, style: AppStyles.caption.copyWith(color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w400)),
+            Text(label, style: AppStyles.caption(context).copyWith(color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w400)),
           ],
         ),
       ),

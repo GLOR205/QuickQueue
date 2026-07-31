@@ -18,4 +18,29 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }) {
     return _remoteDataSource.submitRating(stars: stars, comment: comment, serviceName: serviceName);
   }
+
+  @override
+  Future<ProfileEntity> updateProfile({
+    required String name,
+    required String phone,
+    required String email,
+  }) {
+    return _remoteDataSource.updateProfile(name: name, phone: phone, email: email);
+  }
+
+  @override
+  Future<void> changePassword({required String newPassword}) {
+    return _remoteDataSource.changePassword(newPassword: newPassword);
+  }
+
+  @override
+  Future<ProfileEntity> updatePreferences({
+    required bool notificationsEnabled,
+    required String languageCode,
+  }) {
+    return _remoteDataSource.updatePreferences(
+      notificationsEnabled: notificationsEnabled,
+      languageCode: languageCode,
+    );
+  }
 }

@@ -2,42 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/navigation/home_shell.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+import '../bloc/profile_bloc.dart';
+import '../bloc/profile_event.dart';
+import '../bloc/profile_state.dart';
 
-Future<void> showSignInSheet(BuildContext context, AuthBloc bloc) {
+Future<void> showChangePasswordSheet(BuildContext context, ProfileBloc bloc) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => BlocProvider.value(value: bloc, child: const _SignInSheet()),
+    builder: (_) => BlocProvider.value(value: bloc, child: const _ChangePasswordSheet()),
   );
 }
 
-class _SignInSheet extends StatefulWidget {
-  const _SignInSheet();
+class _ChangePasswordSheet extends StatefulWidget {
+  const _ChangePasswordSheet();
 
   @override
-  State<_SignInSheet> createState() => _SignInSheetState();
+  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
 }
 
-class _SignInSheetState extends State<_SignInSheet> {
+class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
+  }
+
+  String? _validateConfirm(String? value) {
+    if (value != _passwordController.text) return 'Passwords do not match';
+    return null;
   }
 
   @override
@@ -53,17 +56,15 @@ class _SignInSheetState extends State<_SignInSheet> {
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         child: SafeArea(
           top: false,
-          child: BlocConsumer<AuthBloc, AuthState>(
+          child: BlocConsumer<ProfileBloc, ProfileState>(
+            listenWhen: (previous, current) => current.status != previous.status,
             listener: (context, state) {
-              if (state.status == AuthStatus.success) {
+              if (state.status == ProfileStatus.updated) {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const HomeShell()),
-                  (route) => false,
-                );
-              } else if (state.status == AuthStatus.failure && state.errorMessage != null) {
                 ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+                    .showSnackBar(const SnackBar(content: Text('Password updated')));
+              } else if (state.status == ProfileStatus.error && state.errorMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
               }
             },
             builder: (context, state) {
@@ -84,33 +85,32 @@ class _SignInSheetState extends State<_SignInSheet> {
                         ),
                       ),
                     ),
-                    Text(AppStrings.signIn, style: AppStyles.sectionTitle(context).copyWith(fontSize: 18)),
+                    Text('Change password', style: AppStyles.sectionTitle(context).copyWith(fontSize: 18)),
                     const SizedBox(height: 20),
                     QQTextField(
-                      label: 'Email',
-                      hint: 'mynames@gmail.com',
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: Validators.email,
-                    ),
-                    const SizedBox(height: 16),
-                    QQTextField(
-                      label: 'Password',
+                      label: 'New password',
                       hint: '********',
                       controller: _passwordController,
                       obscureText: true,
                       validator: Validators.password,
                     ),
+                    const SizedBox(height: 16),
+                    QQTextField(
+                      label: 'Confirm password',
+                      hint: '********',
+                      controller: _confirmController,
+                      obscureText: true,
+                      validator: _validateConfirm,
+                    ),
                     const SizedBox(height: 20),
                     QQButton(
-                      label: AppStrings.signIn,
-                      isLoading: state.status == AuthStatus.loading,
+                      label: 'Update password',
+                      isLoading: state.status == ProfileStatus.updating,
                       onPressed: () {
                         if (_formKey.currentState?.validate() != true) return;
-                        context.read<AuthBloc>().add(SignInRequested(
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text,
-                            ));
+                        context
+                            .read<ProfileBloc>()
+                            .add(PasswordChangeRequested(newPassword: _passwordController.text));
                       },
                     ),
                   ],

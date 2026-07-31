@@ -19,6 +19,9 @@ class MockLocationRemoteDataSource implements LocationRemoteDataSource {
         district: 'Kacyiru',
         category: LocationCategory.hospital,
         colorValue: 0xFF2B7A78,
+        // KG 544 St, Kacyiru — https://en.wikipedia.org/wiki/King_Faisal_Hospital_(Kigali)
+        latitude: -1.94361,
+        longitude: 30.09500,
       ),
       LocationEntity(
         id: 'loc-bank-of-kigali',
@@ -27,6 +30,9 @@ class MockLocationRemoteDataSource implements LocationRemoteDataSource {
         district: 'Nyarugenge',
         category: LocationCategory.bank,
         colorValue: 0xFF6C63B5,
+        // HQ, 6112 KN 4 Ave — https://en.wikipedia.org/wiki/Bank_of_Kigali
+        latitude: -1.948333,
+        longitude: 30.059722,
       ),
       LocationEntity(
         id: 'loc-chuk',
@@ -35,6 +41,9 @@ class MockLocationRemoteDataSource implements LocationRemoteDataSource {
         district: 'Nyarugenge',
         category: LocationCategory.hospital,
         colorValue: 0xFF3E8E5A,
+        // KN 4 Ave — https://en.wikipedia.org/wiki/University_Teaching_Hospital_of_Kigali
+        latitude: -1.9505113,
+        longitude: 30.0601826,
       ),
       LocationEntity(
         id: 'loc-bpr',
@@ -43,6 +52,9 @@ class MockLocationRemoteDataSource implements LocationRemoteDataSource {
         district: 'Nyarugenge',
         category: LocationCategory.bank,
         colorValue: 0xFF6C63B5,
+        // Head office, KN 30 St, Kiyovu — https://mapcarta.com/N9984147058
+        latitude: -1.9472,
+        longitude: 30.0600,
       ),
     ];
   }

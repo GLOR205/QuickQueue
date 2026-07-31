@@ -4,60 +4,42 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_styles.dart';
+import '../../../../core/navigation/nav_tab_cubit.dart';
+import '../../../../core/widgets/app_bottom_nav.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../location/domain/entities/location_entity.dart';
-import '../../data/datasources/queue_remote_datasource.dart';
-import '../../data/repositories/queue_repository_impl.dart';
 import '../../domain/entities/queue_entity.dart';
-import '../../domain/usecases/get_notifications.dart';
-import '../../domain/usecases/get_queue_position.dart';
-import '../../domain/usecases/get_queues.dart';
-import '../../domain/usecases/join_queue.dart';
-import '../../domain/usecases/leave_queue.dart';
 import '../bloc/queue_bloc.dart';
 import '../bloc/queue_event.dart';
 import '../bloc/queue_state.dart';
-import 'my_ticket_screen.dart';
 
-class ServicesScreen extends StatelessWidget {
+class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key, required this.location});
 
   final LocationEntity location;
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) {
-        final repository = QueueRepositoryImpl(MockQueueRemoteDataSource());
-        return QueueBloc(
-          getQueues: GetQueues(repository),
-          joinQueue: JoinQueue(repository),
-          getQueuePosition: GetQueuePosition(repository),
-          leaveQueue: LeaveQueue(repository),
-          getNotifications: GetNotifications(repository),
-        )..add(QueuesRequested(location.id));
-      },
-      child: _ServicesView(location: location),
-    );
-  }
+  State<ServicesScreen> createState() => _ServicesScreenState();
 }
 
-class _ServicesView extends StatelessWidget {
-  const _ServicesView({required this.location});
-
-  final LocationEntity location;
+class _ServicesScreenState extends State<ServicesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<QueueBloc>().add(QueuesRequested(widget.location.id));
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: BlocListener<QueueBloc, QueueState>(
         listenWhen: (previous, current) => current.status == QueueStatus.joined && current.ticket != null,
         listener: (context, state) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => MyTicketScreen(ticket: state.ticket!)),
-          );
+          context.read<NavTabCubit>().select(QQNavTab.ticket);
+          Navigator.of(context).popUntil((route) => route.isFirst);
         },
         child: Column(
           children: [
@@ -65,10 +47,10 @@ class _ServicesView extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Services', style: AppStyles.bodyMuted),
+                child: Text('Services', style: AppStyles.bodyMuted(context)),
               ),
             ),
-            QQHeader(title: location.name, subtitle: AppStrings.selectServiceSubtitle, compact: true),
+            QQHeader(title: widget.location.name, subtitle: AppStrings.selectServiceSubtitle, compact: true),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
               child: Align(
@@ -78,9 +60,9 @@ class _ServicesView extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.primary),
+                      Icon(Icons.arrow_back, size: 16, color: colors.primary),
                       const SizedBox(width: 6),
-                      Text(AppStrings.backToHome, style: AppStyles.link),
+                      Text(AppStrings.backToHome, style: AppStyles.link(context)),
                     ],
                   ),
                 ),
@@ -90,7 +72,7 @@ class _ServicesView extends StatelessWidget {
               child: BlocBuilder<QueueBloc, QueueState>(
                 builder: (context, state) {
                   if (state.status == QueueStatus.loading || state.status == QueueStatus.initial) {
-                    return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                    return Center(child: CircularProgressIndicator(color: colors.primary));
                   }
                   if (state.status == QueueStatus.error) {
                     return Center(child: Text(state.errorMessage ?? 'Something went wrong'));
@@ -122,7 +104,7 @@ class _ServicesView extends StatelessWidget {
                     onPressed: state.selectedQueue == null
                         ? null
                         : () => context.read<QueueBloc>().add(
-                              QueueJoinRequested(locationId: location.id, locationName: location.name),
+                              QueueJoinRequested(locationId: widget.location.id, locationName: widget.location.name),
                             ),
                   );
                 },
@@ -144,8 +126,9 @@ class _QueueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Material(
-      color: isSelected ? AppColors.primaryLight : AppColors.surface,
+      color: isSelected ? colors.primaryLight : colors.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -154,7 +137,7 @@ class _QueueCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: isSelected ? AppColors.primary : Colors.transparent, width: 1.4),
+            border: Border.all(color: isSelected ? colors.primary : Colors.transparent, width: 1.4),
             boxShadow: isSelected
                 ? null
                 : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
@@ -168,13 +151,13 @@ class _QueueCard extends StatelessWidget {
                   children: [
                     Text(
                       queue.name,
-                      style: AppStyles.cardTitle.copyWith(color: queue.isPriority ? AppColors.error : AppColors.textPrimary),
+                      style: AppStyles.cardTitle(context).copyWith(color: queue.isPriority ? colors.error : colors.textPrimary),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       queue.isPriority ? 'Priority queue' : '${queue.waitingCount} waiting',
-                      style: AppStyles.bodyMuted.copyWith(
-                        color: queue.isPriority ? AppColors.error : (isSelected ? AppColors.primary : AppColors.textSecondary),
+                      style: AppStyles.bodyMuted(context).copyWith(
+                        color: queue.isPriority ? colors.error : (isSelected ? colors.primary : colors.textSecondary),
                       ),
                     ),
                   ],
@@ -182,8 +165,8 @@ class _QueueCard extends StatelessWidget {
               ),
               Text(
                 queue.waitLabel,
-                style: AppStyles.cardTitle.copyWith(
-                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                style: AppStyles.cardTitle(context).copyWith(
+                  color: isSelected ? colors.primary : colors.textSecondary,
                 ),
               ),
             ],

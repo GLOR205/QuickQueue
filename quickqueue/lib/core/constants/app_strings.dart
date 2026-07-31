@@ -14,6 +14,8 @@ class AppStrings {
   static const alreadyHaveAccount = 'Already have an account? ';
 
   static const whereAreYouGoing = 'Where are you going?';
+  static const chooseCategorySubtitle = 'Choose a category to get started';
+  static const backToCategories = 'Back to categories';
   static const selectLocationSubtitle = 'Select a location to join';
   static const searchForPlace = 'Search for a place';
   static const continueLabel = 'Continue';

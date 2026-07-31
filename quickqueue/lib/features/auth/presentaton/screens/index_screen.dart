@@ -14,6 +14,7 @@ import '../../domain/usecases/sign_up_with_email.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/sign_in_sheet.dart';
 import 'register_screen.dart';
+import 'staff_login_screen.dart';
 
 class IndexScreen extends StatelessWidget {
   const IndexScreen({super.key});
@@ -40,8 +41,9 @@ class _IndexView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -52,19 +54,19 @@ class _IndexView extends StatelessWidget {
                 width: 88,
                 height: 88,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: colors.primary,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 alignment: Alignment.center,
                 child: Text('QQ', style: AppStyles.headerTitle.copyWith(fontSize: 28)),
               ),
               const SizedBox(height: 24),
-              Text(AppStrings.appName, style: AppStyles.displayTitle),
+              Text(AppStrings.appName, style: AppStyles.displayTitle(context)),
               const SizedBox(height: 10),
               Text(
                 AppStrings.appTagline,
                 textAlign: TextAlign.center,
-                style: AppStyles.bodyMuted,
+                style: AppStyles.bodyMuted(context),
               ),
               const Spacer(flex: 4),
               QQButton(
@@ -82,10 +84,16 @@ class _IndexView extends StatelessWidget {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () {},
-                child: Text(AppStrings.forgotPassword, style: AppStyles.bodyMuted),
+                child: Text(AppStrings.forgotPassword, style: AppStyles.bodyMuted(context)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const StaffLoginScreen()),
+                ),
+                child: Text('Login as admin', style: AppStyles.link(context)),
               ),
               const Spacer(flex: 2),
-              Text(AppStrings.availableOn, style: AppStyles.caption),
+              Text(AppStrings.availableOn, style: AppStyles.caption(context)),
               const SizedBox(height: 16),
             ],
           ),
@@ -94,3 +102,4 @@ class _IndexView extends StatelessWidget {
     );
   }
 }
+

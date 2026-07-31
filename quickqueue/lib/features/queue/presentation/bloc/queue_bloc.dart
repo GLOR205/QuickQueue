@@ -11,6 +11,10 @@ import '../../domain/usecases/leave_queue.dart';
 import 'queue_event.dart';
 import 'queue_state.dart';
 
+/// Session-scoped: one instance lives for the whole authenticated session
+/// (provided at the app root) so an active ticket and its live position
+/// updates survive navigating between the Locations/Services flow and the
+/// Ticket/Alerts/Profile shell tabs.
 class QueueBloc extends Bloc<QueueEvent, QueueState> {
   QueueBloc({
     required GetQueues getQueues,
@@ -44,13 +48,13 @@ class QueueBloc extends Bloc<QueueEvent, QueueState> {
     emit(state.copyWith(status: QueueStatus.loading));
     try {
       final queues = await _getQueues(event.locationId);
-      emit(QueueState(
+      emit(state.copyWith(
         status: QueueStatus.loaded,
         queues: queues,
         selectedQueue: queues.isNotEmpty ? queues.first : null,
       ));
     } on AppException catch (e) {
-      emit(QueueState(status: QueueStatus.error, errorMessage: e.message));
+      emit(state.copyWith(status: QueueStatus.error, errorMessage: e.message));
     }
   }
 
@@ -69,29 +73,39 @@ class QueueBloc extends Bloc<QueueEvent, QueueState> {
         queue: queue,
       );
       emit(state.copyWith(status: QueueStatus.joined, ticket: ticket));
+      _watchTicket(ticket.ticketNumber);
     } on AppException catch (e) {
-      emit(QueueState(status: QueueStatus.error, errorMessage: e.message));
+      emit(state.copyWith(status: QueueStatus.error, errorMessage: e.message));
     }
   }
 
   Future<void> _onTicketWatchStarted(TicketWatchStarted event, Emitter<QueueState> emit) async {
     emit(state.copyWith(status: QueueStatus.loaded, ticket: event.ticket));
-    await _ticketSubscription?.cancel();
-    _ticketSubscription = _getQueuePosition(event.ticket.ticketNumber).listen((ticket) {
+    _watchTicket(event.ticket.ticketNumber);
+  }
+
+  void _watchTicket(String ticketNumber) {
+    _ticketSubscription?.cancel();
+    _ticketSubscription = _getQueuePosition(ticketNumber).listen((ticket) {
       add(TicketUpdated(ticket));
     });
   }
 
   void _onTicketUpdated(TicketUpdated event, Emitter<QueueState> emit) {
+    // Guard against a stray update landing after the ticket's already been
+    // left (or superseded) — on<TicketUpdated> and on<QueueLeaveRequested>
+    // run concurrently, so a position update queued right as the user taps
+    // "Leave queue" could otherwise resurrect the ticket after it's cleared.
+    if (state.ticket == null || state.ticket!.ticketNumber != event.ticket.ticketNumber) return;
     emit(state.copyWith(ticket: event.ticket));
   }
 
   Future<void> _onQueueLeaveRequested(QueueLeaveRequested event, Emitter<QueueState> emit) async {
     final ticket = state.ticket;
     if (ticket == null) return;
+    emit(state.clearTicket());
     await _ticketSubscription?.cancel();
     await _leaveQueue(ticket.ticketNumber);
-    emit(const QueueState());
   }
 
   Future<void> _onNotificationsRequested(NotificationsRequested event, Emitter<QueueState> emit) async {
@@ -100,7 +114,7 @@ class QueueBloc extends Bloc<QueueEvent, QueueState> {
       final notifications = await _getNotifications();
       emit(state.copyWith(status: QueueStatus.loaded, notifications: notifications));
     } on AppException catch (e) {
-      emit(QueueState(status: QueueStatus.error, errorMessage: e.message));
+      emit(state.copyWith(status: QueueStatus.error, errorMessage: e.message));
     }
   }
 
