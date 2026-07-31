@@ -7,8 +7,11 @@ list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
   firebase_auth
   firebase_core
+feature/user-screens
   geolocator_windows
   url_launcher_windows
+
+main
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

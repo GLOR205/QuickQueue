@@ -1,8 +1,10 @@
 import 'package:equatable/equatable.dart';
 
+feature/user-screens
 import '../../domain/entities/queue_entity.dart';
 import '../../domain/entities/ticket_entity.dart';
 
+main
 abstract class QueueEvent extends Equatable {
   const QueueEvent();
 
@@ -10,6 +12,7 @@ abstract class QueueEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+feature/user-screens
 class QueuesRequested extends QueueEvent {
   const QueuesRequested(this.locationId);
 
@@ -63,3 +66,59 @@ class QueueLeaveRequested extends QueueEvent {
 class NotificationsRequested extends QueueEvent {
   const NotificationsRequested();
 }
+
+class JoinQueueEvent extends QueueEvent {
+  final String serviceId;
+  final String locationId;
+  final String userId;
+
+  const JoinQueueEvent({
+    required this.serviceId,
+    required this.locationId,
+    required this.userId,
+  });
+
+  @override
+  List<Object?> get props => [serviceId, locationId, userId];
+}
+
+class LeaveQueueEvent extends QueueEvent {
+  final String ticketId;
+  final String queueId;
+
+  const LeaveQueueEvent({
+    required this.ticketId,
+    required this.queueId,
+  });
+
+  @override
+  List<Object?> get props => [ticketId, queueId];
+}
+
+class GetQueuePositionEvent extends QueueEvent {
+  final String ticketId;
+
+  const GetQueuePositionEvent({required this.ticketId});
+
+  @override
+  List<Object?> get props => [ticketId];
+}
+
+class LoadQueueEvent extends QueueEvent {
+  final String queueId;
+
+  const LoadQueueEvent({required this.queueId});
+
+  @override
+  List<Object?> get props => [queueId];
+}
+
+class QueueUpdatedEvent extends QueueEvent {
+  final Map<String, dynamic> queueData;
+
+  const QueueUpdatedEvent({required this.queueData});
+
+  @override
+  List<Object?> get props => [queueData];
+}
+main
